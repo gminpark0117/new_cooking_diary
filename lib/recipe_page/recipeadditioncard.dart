@@ -1,26 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import "../recipe.dart";
-import "../providers.dart";
 
-class RecipeAdditionCard extends ConsumerStatefulWidget {
-  const RecipeAdditionCard({super.key});
+
+class RecipeAdditionCard extends StatefulWidget {
+  const RecipeAdditionCard({
+    super.key,
+    required this.titleString,
+    required this.onSubmitCallback,
+    required this.onCancelCallback,
+    this.initialRecipe,
+  });
+
+  final void Function(Recipe recipe) onSubmitCallback; // 레시피 저장 눌렀을 시의 callback.
+  final VoidCallback onCancelCallback; // 레시피 취소 눌렀을 시의 callback.
+
+  final Recipe? initialRecipe;
+  final String titleString;
 
   @override
-  ConsumerState<RecipeAdditionCard> createState() => _RecipeAdditionCardState();
+  State<RecipeAdditionCard> createState() => _RecipeAdditionCardState();
 }
 
-class _RecipeAdditionCardState extends ConsumerState<RecipeAdditionCard> {
-  bool _showRecipeAdditionCard = false;
+class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _portionController;
+  late final TextEditingController _timeController;
+  late final List<TextEditingController> _ingredientControllers;
+  late final List<TextEditingController> _stepControllers;
 
-  final _nameController = TextEditingController();
-  final _portionController = TextEditingController();
-  final _timeController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
 
-  final List<TextEditingController> _ingredientControllers = [];
-  final List<TextEditingController> _stepControllers = [];
+    _nameController = TextEditingController(text: widget.initialRecipe?.name ?? '');
+    _portionController = TextEditingController(text: widget.initialRecipe?.portionSize.toString() ?? '');
+    _timeController = TextEditingController(text: widget.initialRecipe?.timeTaken.toString() ?? '');
+
+    // wow
+    _ingredientControllers = (widget.initialRecipe?.ingredients ?? []).map((ing) => TextEditingController(text: ing)).toList();
+    _stepControllers = (widget.initialRecipe?.steps ?? []).map((step) => TextEditingController(text: step)).toList();
+  }
 
   @override
   void dispose() {
@@ -63,194 +84,150 @@ class _RecipeAdditionCardState extends ConsumerState<RecipeAdditionCard> {
     });
   }
 
-  void _submitRecipe(Recipe recipe) {
-    ref.read(recipeProvider.notifier).addRecipe(recipe);
-    setState(() {
-      _showRecipeAdditionCard = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    debugPrint("rebuilding, showcard: $_showRecipeAdditionCard");
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: FilledButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('레시피 추가'),
-              onPressed: () {
-                setState(() {
-                  _showRecipeAdditionCard = !_showRecipeAdditionCard;
-                });
-              },
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
+        // 제목
+        Text(
+          widget.titleString,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+
+        // 이름
+        TextField(
+          controller: _nameController,
+          decoration: const InputDecoration(
+            labelText: '레시피 이름',
+            border: OutlineInputBorder(),
           ),
         ),
-        if (_showRecipeAdditionCard)
-          Card(
-            elevation: 4,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Add Recipe',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
-                    /// Name
-                    TextField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Recipe Name',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    /// Portion Size
-                    TextField(
-                      controller: _portionController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      decoration: const InputDecoration(
-                        labelText: 'Portion Size (in servings)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    /// Estimated Time
-                    TextField(
-                      controller: _timeController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      decoration: const InputDecoration(
-                        labelText: 'Estimated Time (minutes)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    /// Ingredients
-                    _buildSectionHeader('Ingredients', _addIngredient),
-                    const SizedBox(height: 8),
-                    ..._ingredientControllers.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final controller = entry.value;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: controller,
-                                decoration: InputDecoration(
-                                  labelText: 'Ingredient ${index + 1}',
-                                  border: const OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () => _removeIngredient(index),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-
-                    const SizedBox(height: 20),
-
-                    /// Steps
-                    _buildSectionHeader('Steps', _addStep),
-                    const SizedBox(height: 8),
-                    ..._stepControllers.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final controller = entry.value;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: controller,
-                                maxLines: 2,
-                                decoration: InputDecoration(
-                                  labelText: 'Step ${index + 1}',
-                                  border: const OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () => _removeStep(index),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-
-                    const SizedBox(height: 24),
-
-
-                    Row(
-                      children: [
-                        /// Submit Button
-                         Expanded(
-                          child: FilledButton(
-                            onPressed: () =>
-                              _submitRecipe(Recipe(
-                                  portionSize: int.tryParse(_portionController.text.trim())!,
-                                  timeTaken: int.tryParse(_timeController.text.trim())!,
-                                  name: _nameController.text.trim(),
-                                  ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
-                                  steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
-                              )),
-                            child: const Text('Save Recipe'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        /// Cancel Button
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () =>
-                                setState(() {
-                                  _showRecipeAdditionCard = false;
-                                }),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+        // 분량, 소요시간
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _portionController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                decoration: const InputDecoration(
+                  labelText: '분량 (인분)',
+                  border: OutlineInputBorder(),
                 ),
               ),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _timeController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                ],
+                decoration: const InputDecoration(
+                  labelText: '조리시간 (분)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        // 재료
+        _buildSectionHeader('재료', _addIngredient),
+        const SizedBox(height: 8),
+        ..._ingredientControllers.asMap().entries.map((entry) {
+          final index = entry.key;
+          final controller = entry.value;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: '재료 ${index + 1}',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () => _removeIngredient(index),
+                ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 12),
+
+        // 단계
+        _buildSectionHeader('단계', _addStep),
+        const SizedBox(height: 8),
+        ..._stepControllers.asMap().entries.map((entry) {
+          final index = entry.key;
+          final controller = entry.value;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: '단계 ${index + 1}',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () => _removeStep(index),
+                ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 24),
+
+        // 저장, 삭제버튼
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton(
+                onPressed: () {
+                  widget.onSubmitCallback(Recipe(
+                    portionSize: int.tryParse(_portionController.text.trim())!,
+                    timeTaken: int.tryParse(_timeController.text.trim())!,
+                    name: _nameController.text.trim(),
+                    ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
+                    steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
+                  ));
+                },
+                child: const Text('레시피 저장'),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: ElevatedButton(
+                onPressed: widget.onCancelCallback,
+                child: const Text('취소'),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
