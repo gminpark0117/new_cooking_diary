@@ -22,5 +22,3 @@ final recipeProvider =
 StateNotifierProvider<RecipeNotifier, RecipeState>((ref) {
   return RecipeNotifier();
 });
-
-final addRecipeCardProvider = StateProvider<bool>((ref) => false);

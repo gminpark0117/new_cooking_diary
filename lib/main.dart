@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import "./firstpage.dart";
+import "firstpage/maincolumn.dart";
 
 void main() {
   runApp(
