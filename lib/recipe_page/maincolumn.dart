@@ -34,19 +34,27 @@ class _AddHeaderState extends ConsumerState<AddHeader> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8, left: 16, right: 16),
+          padding: const EdgeInsets.only(top: 0, bottom: 8, left: 16, right: 16),
           child: SizedBox(
             width: double.infinity,
             height: 50,
             child: FilledButton.icon(
               icon: const Icon(Icons.add),
-              label: const Text('레시피 추가'),
+              label: const Text(
+                  '레시피 추가',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               onPressed: () {
                 setState(() {
                   _showRecipeAdditionCard = !_showRecipeAdditionCard;
                 });
               },
               style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFB65A2C),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
