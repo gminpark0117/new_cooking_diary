@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import "addrecipecard.dart";
-import "recipelist.dart";
+import "recipeadditioncard.dart";
+import "recipentry.dart";
 import "../providers.dart";
 
 class MainColumn extends ConsumerWidget {
@@ -29,51 +29,3 @@ class MainColumn extends ConsumerWidget {
 }
 
 
-
-/*
-class AddRecipeCard extends ConsumerWidget {
-  const AddRecipeCard({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-
-    final visibilityWatcher = ref.watch(addRecipeCardProvider);
-    return (visibilityWatcher) ? RecipeAdditionCard() : SizedBox.shrink();
-
-    return (visibilityWatcher)
-      ? Column (
-        children: [
-          Text("추가!"),
-          Row(
-            children: [
-              FilledButton (
-                child: Text('추가'),
-                onPressed: () {
-                  // TODO: 더미 레시피 일단은...
-                  final idx = Random().nextInt(10);
-                  ref.read(recipeProvider.notifier).addRecipe(Recipe(
-                      name: "Recipe $idx",
-                      ingredients: ["test ingredient 0"],
-                      steps: ["test steps 0"],
-                    )
-                  );
-                },
-              ),
-              FilledButton (
-                child: Text('취소'),
-                onPressed: () {
-                  ref.read(addRecipeCardProvider.notifier).state = false;
-                },
-              ),
-            ],
-          )
-        ],
-      )
-    : SizedBox.shrink();
-
-  }
-}
-
-*/

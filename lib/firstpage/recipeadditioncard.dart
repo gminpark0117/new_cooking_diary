@@ -75,13 +75,26 @@ class _RecipeAdditionCardState extends ConsumerState<RecipeAdditionCard> {
     debugPrint("rebuilding, showcard: $_showRecipeAdditionCard");
     return Column(
       children: [
-        FilledButton (
-          child: Text('레시피 추가'),
-          onPressed: () {
-            setState(() {
-              _showRecipeAdditionCard = !_showRecipeAdditionCard;
-            });
-          },
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: FilledButton.icon(
+              icon: const Icon(Icons.add),
+              label: const Text('레시피 추가'),
+              onPressed: () {
+                setState(() {
+                  _showRecipeAdditionCard = !_showRecipeAdditionCard;
+                });
+              },
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
         ),
         if (_showRecipeAdditionCard)
           Card(
@@ -211,8 +224,8 @@ class _RecipeAdditionCardState extends ConsumerState<RecipeAdditionCard> {
                           child: FilledButton(
                             onPressed: () =>
                               _submitRecipe(Recipe(
-                                  portionSize: int.tryParse(_portionController.text.trim()),
-                                  timeTaken: int.tryParse(_timeController.text.trim()),
+                                  portionSize: int.tryParse(_portionController.text.trim())!,
+                                  timeTaken: int.tryParse(_timeController.text.trim())!,
                                   name: _nameController.text.trim(),
                                   ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
                                   steps: _stepControllers.map((controller) => controller.text.trim()).toList(),

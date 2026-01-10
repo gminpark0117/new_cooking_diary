@@ -13,6 +13,11 @@ class RecipeNotifier extends StateNotifier<RecipeState> {
     state = RecipeState([...state.recipes, recipe]);
   }
 
+  void getRecipe(String? matchWord) {
+    // TODO: implement
+    throw UnimplementedError();
+  }
+
   void deleteRecipe(Recipe recipe) {
     state = RecipeState(List.of(state.recipes)..remove(recipe));
   }
