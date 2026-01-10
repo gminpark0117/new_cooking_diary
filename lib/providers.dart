@@ -13,9 +13,21 @@ class RecipeNotifier extends StateNotifier<RecipeState> {
     state = RecipeState([...state.recipes, recipe]);
   }
 
-  void getRecipe(String? matchWord) {
-    // TODO: implement
-    throw UnimplementedError();
+  List<Recipe> getRecipe({String filter = ''}) {
+    return state.recipes.where((r) => r.name.contains(filter)).toList();
+  }
+
+  void updateRecipe(Recipe oldRecipe, Recipe newRecipe) {
+    final targetIdx = state.recipes.indexWhere((r) => r.id == oldRecipe.id);
+    if (targetIdx == -1) {
+      throw Exception("exception in RecipeNotifier.updateRecipe: recipe not found in recipe list");
+    }
+
+    state = RecipeState([
+      ...state.recipes.sublist(0, targetIdx),
+      newRecipe,
+      ...state.recipes.sublist(targetIdx+1),
+    ]);
   }
 
   void deleteRecipe(Recipe recipe) {

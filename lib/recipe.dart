@@ -10,9 +10,9 @@ class Recipe {
     required this.steps,
   });
   final String id = uuid.v4();
-  String name;
-  int portionSize;
-  int timeTaken;
-  List<String> ingredients;
-  List<String> steps;
+  final String name;
+  final int portionSize;
+  final int timeTaken;
+  final List<String> ingredients;
+  final List<String> steps;
 }
