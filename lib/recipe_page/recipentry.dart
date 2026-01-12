@@ -115,7 +115,7 @@ class _RecipeDescriptionState extends ConsumerState<RecipeDescription> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 28,
+                      width: 20,
                       child: Text('${i + 1}.'),
                     ),
                     Expanded(child: Text(step)),
@@ -136,7 +136,7 @@ class _RecipeDescriptionState extends ConsumerState<RecipeDescription> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 28,
+                    width: 20,
                     child: Text(' - '),
                   ),
                   Expanded(child: Text(memo)),
@@ -359,85 +359,83 @@ class RecipeDetailPage extends StatelessWidget {
         onPointerDown: (_) {
           FocusManager.instance.primaryFocus?.unfocus();
         },
-        child: ListView(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            children: [
-              Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                clipBehavior: Clip.antiAlias,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Header (matches ExpansionTile tile area)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    recipe.name,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (recipe.meta().isNotEmpty) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      recipe.meta(),
-                                      style: theme.textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  iconSize: 26,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  visualDensity: VisualDensity.standard,
-                                  tooltip: '레시피 수정',
-                                  onPressed: () {
-                                    onEditCallback();
-                                  },
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(vertical: 8),
+          child: Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Header (matches ExpansionTile tile area)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                recipe.name,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline),
-                                  iconSize: 26,
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  visualDensity: VisualDensity.standard ,
-                                  tooltip: '레시피 삭제',
-                                  onPressed: onDeleteCallback,
+                              ),
+                              if (recipe.meta().isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  recipe.meta(),
+                                  style: theme.textTheme.bodySmall,
                                 ),
                               ],
+                            ],
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              iconSize: 26,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              visualDensity: VisualDensity.standard,
+                              tooltip: '레시피 수정',
+                              onPressed: () {
+                                onEditCallback();
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              iconSize: 26,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              visualDensity: VisualDensity.standard ,
+                              tooltip: '레시피 삭제',
+                              onPressed: onDeleteCallback,
                             ),
                           ],
                         ),
-                      ),
-
-                      const Divider(height: 1, thickness: 1),
-
-                      // Body (matches ExpansionTile childrenPadding)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
-                        child: RecipeDescription(recipe: recipe),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+
+                  const Divider(height: 1, thickness: 1),
+
+                  // Body (matches ExpansionTile childrenPadding)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+                    child: RecipeDescription(recipe: recipe),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
+        ),
         ),
     );
   }

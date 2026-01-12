@@ -151,7 +151,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
+          const Divider(height: 34, thickness: 1),
 
           // 재료
           _buildSectionHeader('재료', _addIngredient),
@@ -324,9 +325,13 @@ class PaddedRecipeAdditionCard extends StatelessWidget {
       onPointerDown: (_) {
         FocusManager.instance.primaryFocus?.unfocus();
       },
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(24),
-        child: RecipeAdditionCard(titleString: titleString, onSubmitCallback: onSubmitCallback, onCancelCallback: onCancelCallback, initialRecipe: initialRecipe,),
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        clipBehavior: Clip.antiAlias,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(24),
+          child: RecipeAdditionCard(titleString: titleString, onSubmitCallback: onSubmitCallback, onCancelCallback: onCancelCallback, initialRecipe: initialRecipe,),
+        ),
       ),
     );
   }
