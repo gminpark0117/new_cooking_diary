@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import "recipeadditioncard.dart";
 import "recipentry.dart";
-import "../providers.dart";
-import "../recipe.dart";
+import "../data/recipe_provider.dart";
+import "../classes/recipe.dart";
 
 
 class AddHeader extends ConsumerStatefulWidget {

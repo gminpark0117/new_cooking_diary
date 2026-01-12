@@ -17,6 +17,7 @@ class AppDb {
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
+
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE recipes (
@@ -47,6 +48,23 @@ class AppDb {
             FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
             UNIQUE(recipe_id, pos)
           );
+        ''');
+
+        await db.execute('''
+            CREATE TABLE diary_entries (
+            id TEXT PRIMARY KEY,
+            image_path TEXT,
+            recipe_name TEXT NOT NULL,
+            note TEXT
+          );
+          '''); //TODO: create index?
+
+        await db.execute('''
+          CREATE TABLE groceries (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          recipe_name TEXT NOT NULL
+        );
         ''');
 
         await db.execute(

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:new_cooking_diary/recipe_page/recipeadditioncard.dart';
 
-import "../recipe.dart";
-import '../providers.dart';
+import "../classes/recipe.dart";
+import '../data/recipe_provider.dart';
 
 class RecipeDescription extends ConsumerStatefulWidget {
   const RecipeDescription({

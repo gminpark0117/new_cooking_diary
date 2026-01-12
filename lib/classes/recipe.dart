@@ -1,10 +1,10 @@
 import 'package:uuid/uuid.dart';
-import 'database.dart';
+import '../data/database.dart';
 import 'package:sqflite/sqflite.dart';
 
-var uuid = Uuid();
-class Recipe {
 
+class Recipe {
+  static const Uuid _uuid = Uuid();
   Recipe({
     String? id,
     required this.name,
@@ -12,7 +12,7 @@ class Recipe {
     required this.timeTaken,
     required this.ingredients,
     required this.steps,
-  }) : id = (id ?? uuid.v4());
+  }) : id = (id ?? _uuid.v4());
 
   final String id;
   final String name;
