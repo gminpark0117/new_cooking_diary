@@ -128,23 +128,29 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
 
         return Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              RecipeAddHeader(),
-              SearchField(controller: _searchController, onChanged: _onChangedCallback,),
-              Divider(height: 24, thickness: 1, indent: 8, endIndent: 8,),
-              Expanded(
-                child: ListView.builder(
-                  //padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                RecipeAddHeader(),
+                SearchField(
+                  controller: _searchController,
+                  onChanged: _onChangedCallback,
+                ),
+                const Divider(height: 24, thickness: 1),
+
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: filteredRecipes.length,
                   itemBuilder: (context, index) {
-
-                    //return RecipeEntry(recipe: filteredRecipes[index]);
-                    return RecipePreview(recipe: filteredRecipes[index], pressedCallback: (_) => {});
+                    return RecipePreview(
+                      recipe: filteredRecipes[index],
+                      pressedCallback: (_) {},
+                    );
                   },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       }

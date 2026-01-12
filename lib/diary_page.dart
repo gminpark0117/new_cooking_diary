@@ -1,42 +1,323 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
 
-class DiaryPage extends StatefulWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'classes/recipe.dart';
+import 'classes/diary_entry.dart';
+
+import 'data/recipe_provider.dart';
+import 'data/diary_entry_provider.dart';
+import 'diary_detail_page.dart';
+
+class DiaryPage extends ConsumerStatefulWidget {
   const DiaryPage({super.key});
 
   @override
-  State<DiaryPage> createState() => _DiaryPageState();
+  ConsumerState<DiaryPage> createState() => _DiaryPageState();
 }
 
-class _DiaryPageState extends State<DiaryPage> {
+class _DiaryPageState extends ConsumerState<DiaryPage> {
   bool _showAddArea = false;
+
+  bool _selectionMode = false; // 삭제 선택 모드 여부
+  final Set<String> _selectedIds = {}; // 선택된 diaryEntry id들
+
+  String? _pickedImagePath; // 선택한 사진 파일 경로
+  final _picker = ImagePicker();
+
+  final ScrollController _scrollController = ScrollController();
+
+  Recipe? _selectedRecipe;
+  final TextEditingController _memoController = TextEditingController();
+
+  Future<void> _pickImage() async {
+    final XFile? file = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (file != null) {
+      setState(() {
+        _pickedImagePath = file.path;
+      });
+    }
+  }
+
+  Future<void> _openRecipePicker() async {
+    final recipes = ref.watch(recipeProvider).value ?? [];
+    String keyword = '';
+
+    final picked = await showModalBottomSheet<Recipe>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final filteredRecipes = recipes
+                .where((r) => r.name.toLowerCase().contains(keyword.toLowerCase()))
+                .toList();
+
+            return SafeArea(
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.7,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 12),
+                    const Text(
+                      '레시피 선택',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // 🔍 검색창
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        textInputAction: TextInputAction.search,
+                        onChanged: (value) {
+                          setModalState(() {
+                            keyword = value;
+                          });
+                        },
+                        onSubmitted: (_) {}, // 완료 눌러도 유지
+                        decoration: InputDecoration(
+                          hintText: '레시피 이름 검색',
+                          prefixIcon: const Icon(Icons.search),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFB65A2C),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+
+                    Expanded(
+                      child: filteredRecipes.isEmpty
+                          ? const Center(
+                        child: Text(
+                          '검색 결과가 없습니다',
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                      )
+                          : ListView.separated(
+                        itemCount: filteredRecipes.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final r = filteredRecipes[index];
+                          return ListTile(
+                            title: Text(r.name),
+                            onTap: () => Navigator.pop(context, r),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() => _selectedRecipe = picked);
+    }
+  }
+
+  @override
+  void dispose() {
+    _memoController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bool canSave = _selectedRecipe != null && _pickedImagePath != null;
+    final entriesAsync = ref.watch(diaryProvider);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ✅ 상단 Row
             Row(
-              children: [
-                //새 요리 기록하기 버튼
+              children: _selectionMode
+                  ? [
+                // 취소
+                Expanded(
+                  child: SizedBox(
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setState(() {
+                          _selectionMode = false;
+                          _selectedIds.clear();
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey.shade700,
+                        side: BorderSide(color: Colors.grey.shade400),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: const Text(
+                        '취소',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // 전체 선택/해제
+                SizedBox(
+                  width: 110,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: entriesAsync.maybeWhen(
+                      data: (entries) {
+                        if (entries.isEmpty) return null;
+                        return () {
+                          setState(() {
+                            final allIds = entries.map((e) => e.id).toSet();
+                            final isAllSelected = _selectedIds.length == allIds.length;
+
+                            if (isAllSelected) {
+                              _selectedIds.clear();
+                            } else {
+                              _selectedIds
+                                ..clear()
+                                ..addAll(allIds);
+                            }
+                          });
+                        };
+                      },
+                      orElse: () => null,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade800,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      entriesAsync.maybeWhen(
+                        data: (entries) {
+                          final allIds = entries.map((e) => e.id).toSet();
+                          final isAllSelected =
+                              _selectedIds.length == allIds.length && allIds.isNotEmpty;
+                          return isAllSelected ? '전체 해제' : '전체 선택';
+                        },
+                        orElse: () => '전체 선택',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // 삭제
+                SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _selectedIds.isEmpty
+                        ? null
+                        : () async {
+                      final entries = entriesAsync.value ?? [];
+                      final targets = entries.where((e) => _selectedIds.contains(e.id));
+                      for (final entry in targets) {
+                        await ref.read(diaryProvider.notifier).deleteEntry(entry);
+                      }
+
+                      setState(() {
+                        _selectionMode = false;
+                        _selectedIds.clear();
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: const Text(
+                      '삭제',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ]
+                  : [
+                // 새 요리 기록하기
                 Expanded(
                   child: SizedBox(
                     height: 52,
                     child: ElevatedButton.icon(
                       onPressed: () {
                         setState(() {
-                          _showAddArea = !_showAddArea; // 토글
+                          _showAddArea = !_showAddArea;
+                          if (_showAddArea) {
+                            _selectedRecipe = null;
+                            _pickedImagePath = null;
+                            _memoController.clear();
+                          }
                         });
+
+                        if (_showAddArea) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _scrollController.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                            );
+                          });
+                        }
                       },
                       icon: const Icon(Icons.add_a_photo_outlined),
                       label: const Text(
                         '새 요리 기록하기',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFB65A2C),
@@ -49,16 +330,18 @@ class _DiaryPageState extends State<DiaryPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(width: 8),
 
-                // 삭제 버튼
+                // 휴지통
                 SizedBox(
                   width: 52,
                   height: 52,
                   child: ElevatedButton(
                     onPressed: () {
-                      // TODO: 나중에 삭제 기능
+                      setState(() {
+                        _selectionMode = true;
+                        _selectedIds.clear();
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -69,19 +352,19 @@ class _DiaryPageState extends State<DiaryPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Icon(
-                      Icons.delete_outline,
-                      size: 24,
+                    child: const Center(
+                      child: Icon(Icons.delete_outline, size: 24),
                     ),
                   ),
                 ),
               ],
             ),
+
             const SizedBox(height: 16),
 
+            // ✅ 새 기록 입력 영역
             if (_showAddArea)
-              Container( // 눌렀을 때 나오는 큰 흰색 네모 박스
-                // height: 500,
+              Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -92,7 +375,6 @@ class _DiaryPageState extends State<DiaryPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // 새 요리 기록, 레시피 선택
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
@@ -119,94 +401,144 @@ class _DiaryPageState extends State<DiaryPage> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 7),
 
-                      //레시피 선택 버튼
-                      Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300, width: 1.5),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Row(
-                          children: [
-                            const Expanded(
-                              child: Text(
-                                '레시피를 선택하세요',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
+                      InkWell(
+                        onTap: _openRecipePicker,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300, width: 1.5),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _selectedRecipe?.name ?? '레시피를 선택하세요',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Icon(
-                              Icons.keyboard_arrow_down, // ▼ 느낌
-                              color: Colors.grey.shade600,
-                              size: 28,
-                            ),
-                          ],
+                              Icon(
+                                Icons.keyboard_arrow_down,
+                                color: Colors.grey.shade600,
+                                size: 28,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 12),
 
-                      // 메모 버튼
-                      Container(
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300, width: 1.5),
-                        ),
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: const Text(
-                          '메모 (선택사항)',
-                          style: TextStyle(
+                      TextField(
+                        controller: _memoController,
+                        minLines: 1,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: '메모 (선택사항)',
+                          hintStyle: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                             color: Colors.black54,
                           ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFB65A2C),
+                              width: 1.8,
+                            ),
+                          ),
                         ),
                       ),
 
                       const SizedBox(height: 12),
 
-                      // 사진 추가 영역
-                      Container(
-                        width: double.infinity, //이게 최대 허용 넓이인가
-                        height: 260,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey.shade300,
-                            width: 1.5,
+                      InkWell(
+                        onTap: _pickedImagePath == null ? _pickImage : null,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: double.infinity,
+                          height: 260,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                              width: 1.5,
+                            ),
+                            color: Colors.grey.shade50,
                           ),
-                          color: Colors.grey.shade50,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Icon(
-                              Icons.photo_camera_outlined,
-                              size: 48,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              '사진을 추가하세요',
-                              style: TextStyle(
+                          child: _pickedImagePath == null
+                              ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(
+                                Icons.photo_camera_outlined,
+                                size: 48,
                                 color: Colors.grey,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
                               ),
-                            ),
-                          ],
+                              SizedBox(height: 8),
+                              Text(
+                                '사진을 추가하세요',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          )
+                              : Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(_pickedImagePath!),
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 8,
+                                right: 8,
+                                child: InkWell(
+                                  onTap: _pickImage,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.edit,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
 
@@ -218,7 +550,7 @@ class _DiaryPageState extends State<DiaryPage> {
                             child: OutlinedButton(
                               onPressed: () {
                                 setState(() {
-                                  _showAddArea = false; //취소
+                                  _showAddArea = false;
                                 });
                               },
                               style: OutlinedButton.styleFrom(
@@ -241,14 +573,39 @@ class _DiaryPageState extends State<DiaryPage> {
                               ),
                             ),
                           ),
-
                           const SizedBox(width: 12),
-
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () {
-                                // TODO: 저장 기능
-                              },
+                              onPressed: canSave
+                                  ? () async {
+                                final recipe = _selectedRecipe!;
+                                final imagePath = _pickedImagePath!;
+                                final memo = _memoController.text.trim();
+
+                                await ref.read(diaryProvider.notifier).upsertEntry(
+                                  DiaryEntry(
+                                    recipeName: recipe.name,
+                                    imagePath: imagePath,
+                                    note: memo.isEmpty ? null : memo,
+                                  ),
+                                );
+
+                                setState(() {
+                                  _showAddArea = false;
+                                  _selectedRecipe = null;
+                                  _pickedImagePath = null;
+                                  _memoController.clear();
+                                });
+
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  _scrollController.animateTo(
+                                    0,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOut,
+                                  );
+                                });
+                              }
+                                  : null,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFB65A2C),
                                 foregroundColor: Colors.white,
@@ -273,10 +630,126 @@ class _DiaryPageState extends State<DiaryPage> {
                   ),
                 ),
               ),
+
+            const SizedBox(height: 16),
+
+            // ✅ 기록 목록
+            entriesAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, st) => const SizedBox(),
+              data: (entries) {
+                if (entries.isEmpty) return const SizedBox();
+
+                final shown = entries.reversed.toList();
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: shown.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1 / 1.25,
+                  ),
+                  itemBuilder: (context, index) {
+                    final entry = shown[index];
+
+                    return Stack(
+                      children: [
+                        InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: _selectionMode
+                              ? null
+                              : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => DiaryDetailPage(entry: entry),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  child: entry.imagePath != null
+                                      ? Image.file(
+                                    File(entry.imagePath!),
+                                    fit: BoxFit.cover,
+                                  )
+                                      : Container(color: Colors.grey.shade200),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(10),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        entry.recipeName,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (entry.note != null && entry.note!.trim().isNotEmpty) ...[
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          entry.note!.trim(),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.black54,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        if (_selectionMode)
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Checkbox(
+                              value: _selectedIds.contains(entry.id),
+                              onChanged: (checked) {
+                                setState(() {
+                                  if (checked == true) {
+                                    _selectedIds.add(entry.id);
+                                  } else {
+                                    _selectedIds.remove(entry.id);
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
     );
   }
 }
-
