@@ -1,3 +1,4 @@
+import "package:flutter/rendering.dart";
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import "../classes/recipe.dart";
@@ -16,6 +17,7 @@ class RecipeNotifier extends AsyncNotifier<List<Recipe>> {
   }
 
   Future<void> upsertRecipe(Recipe recipe) async {
+    debugPrint("inserting recipe with memos ${recipe.memos}");
     final previous = state.value ?? const <Recipe>[];
     state = AsyncData(_upsertInList(previous, recipe));
 

@@ -35,6 +35,11 @@ class _RecipeDescriptionState extends ConsumerState<RecipeDescription> {
         .where((s) => s.isNotEmpty)
         .toList();
 
+    final memos = widget.recipe.memos
+      .map((s) => s.trim())
+      .where((s) => s.isNotEmpty)
+      .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -73,9 +78,16 @@ class _RecipeDescriptionState extends ConsumerState<RecipeDescription> {
           width: double.infinity,
           child: OutlinedButton(
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               for (final idx in _checkedIngredientIndexes) {
                 await ref.read(groceryProvider.notifier).upsertGrocery(
                   Grocery(name: widget.recipe.ingredients[idx], recipeName: widget.recipe.name)
+                );
+              }
+              if (_checkedIngredientIndexes.isNotEmpty) {
+                messenger.clearSnackBars();
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('장바구니에 추가되었습니다.')),
                 );
               }
             },
@@ -112,6 +124,28 @@ class _RecipeDescriptionState extends ConsumerState<RecipeDescription> {
               );
             },
           ),
+        if (memos.isNotEmpty)
+          Divider(height: 24,thickness: 1,indent: 8,endIndent: 8,),
+
+        // this still shows nothing if memos is empty
+        ...memos.map(
+              (memo) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 28,
+                    child: Text(' - '),
+                  ),
+                  Expanded(child: Text(memo)),
+                ],
+              ),
+            );
+          },
+        ),
+
       ],
     );
 
@@ -150,6 +184,7 @@ class _RecipeEntryState extends ConsumerState<RecipeEntry> {
       });
     } catch (e) {
       if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('레시피 저장 중 오류: $e')),
       );
@@ -166,10 +201,6 @@ class _RecipeEntryState extends ConsumerState<RecipeEntry> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final meta = [
-      if (widget.recipe.portionSize != null) '분량: ${widget.recipe.portionSize}',
-      if (widget.recipe.timeTaken != null) '시간: ${widget.recipe.timeTaken}',
-    ].join(' • ');
 
     final targetChild = _inEditMode
         ? RecipeAdditionCard(titleString: "레시피 수정", onSubmitCallback: _onSubmit, onCancelCallback: _onCancel, initialRecipe: widget.recipe,)
@@ -236,10 +267,10 @@ class _RecipeEntryState extends ConsumerState<RecipeEntry> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          subtitle: meta.isEmpty
+          subtitle: widget.recipe.meta().isEmpty
               ? null
               : Text(
-            meta,
+            widget.recipe.meta(),
             style: theme.textTheme.bodySmall,
           ),
           children: [targetChild],
@@ -250,6 +281,54 @@ class _RecipeEntryState extends ConsumerState<RecipeEntry> {
 }
 
 
+class RecipePreview extends StatelessWidget {
+
+  const RecipePreview({
+    super.key,
+    required this.recipe,
+    required this.pressedCallback,
+  });
+
+  final Recipe recipe;
+  final void Function(Recipe recipe) pressedCallback;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        child: ElevatedButton(
+          onPressed: () {
+            pressedCallback(recipe);
+          },
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.centerLeft,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                recipe.name,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                recipe.meta(),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title});
 

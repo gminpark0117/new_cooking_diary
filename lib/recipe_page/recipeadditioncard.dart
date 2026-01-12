@@ -28,7 +28,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
   late final TextEditingController _timeController;
   late final List<TextEditingController> _ingredientControllers;
   late final List<TextEditingController> _stepControllers;
-
+  late final List<TextEditingController> _memoControllers;
   @override
   void initState() {
     super.initState();
@@ -40,6 +40,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     // wow
     _ingredientControllers = (widget.initialRecipe?.ingredients ?? []).map((ing) => TextEditingController(text: ing)).toList();
     _stepControllers = (widget.initialRecipe?.steps ?? []).map((step) => TextEditingController(text: step)).toList();
+    _memoControllers = (widget.initialRecipe?.memos ?? []).map((memo) => TextEditingController(text: memo)).toList();
   }
 
   @override
@@ -52,6 +53,9 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
       c.dispose();
     }
     for (final c in _stepControllers) {
+      c.dispose();
+    }
+    for (final c in _memoControllers) {
       c.dispose();
     }
     super.dispose();
@@ -69,6 +73,12 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     });
   }
 
+  void _addMemo() {
+    setState(() {
+      _memoControllers.add(TextEditingController());
+    });
+  }
+
   void _removeIngredient(int index) {
     setState(() {
       _ingredientControllers[index].dispose();
@@ -80,6 +90,13 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     setState(() {
       _stepControllers[index].dispose();
       _stepControllers.removeAt(index);
+    });
+  }
+
+  void _removeMemo(int index) {
+    setState(() {
+      _memoControllers[index].dispose();
+      _memoControllers.removeAt(index);
     });
   }
 
@@ -190,6 +207,36 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
             ),
           );
         }),
+        const SizedBox(height: 12),
+        // 메모
+        _buildSectionHeader('메모', _addMemo),
+        const SizedBox(height: 8),
+        ..._memoControllers.asMap().entries.map((entry) {
+          final index = entry.key;
+          final controller = entry.value;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      labelText: '메모 ${index + 1}',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () => _removeMemo(index),
+                ),
+              ],
+            ),
+          );
+        }),
         const SizedBox(height: 24),
 
         // 저장, 삭제버튼
@@ -199,6 +246,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
               child: FilledButton(
                 onPressed: () async {
                   if (_nameController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).clearSnackBars();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('레시피의 이름을 입력하세요.')),
                     );
@@ -210,7 +258,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                         portionSize: _portionController.text.trim().isEmpty ? null : _portionController.text,
                         timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
                         ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
-                        steps: _stepControllers.map((controller) => controller.text.trim()).toList()
+                        steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
+                        memos: _memoControllers.map((controller) => controller.text.trim()).toList(),
                   ));
                 },
                 child: const Text('레시피 저장'),

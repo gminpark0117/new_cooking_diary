@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:uuid/uuid.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -8,12 +9,12 @@ class Grocery {
   Grocery({
     String? id,
     required this.name,
-    required this.recipeName,
+    this.recipeName,
   }) : id = id ?? _uuid.v4();
 
   final String id;
   final String name;
-  final String recipeName;
+  final String? recipeName;
 }
 
 class GroceryRepository {
@@ -29,14 +30,14 @@ class GroceryRepository {
       return Grocery(
         id: r['id'] as String,
         name: r['name'] as String,
-        recipeName: r['recipe_name'] as String,
+        recipeName: r['recipe_name'] as String?,
       );
     }).toList();
   }
 
   Future<void> upsertGrocery(Grocery grocery) async {
     final db = await _db.db;
-
+    debugPrint("\n\n\ncalling upsert.. grocery: ${grocery.id}\n\n\n\n");
     await db.insert(
       'groceries',
       {

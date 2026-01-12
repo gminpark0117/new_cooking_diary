@@ -14,7 +14,7 @@ class GroceryNotifier extends AsyncNotifier<List<Grocery>> {
   // This guy searches for both name and recipeName!
   List<Grocery> getGroceries({String filter = ''}) {
     return (state.value ?? const <Grocery>[])
-        .where((g) => g.name.contains(filter) || g.recipeName.contains(filter))
+        .where((g) => g.name.contains(filter) || (g.recipeName?.contains(filter) ?? false))
         .toList();
   }
 

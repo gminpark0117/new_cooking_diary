@@ -51,6 +51,17 @@ class AppDb {
         ''');
 
         await db.execute('''
+          CREATE TABLE recipe_memos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipe_id TEXT NOT NULL,
+            pos INTEGER NOT NULL,
+            text TEXT NOT NULL,
+            FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+            UNIQUE(recipe_id, pos)
+          );
+        ''');
+
+        await db.execute('''
             CREATE TABLE diary_entries (
             id TEXT PRIMARY KEY,
             image_path TEXT,
@@ -63,7 +74,7 @@ class AppDb {
           CREATE TABLE groceries (
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
-          recipe_name TEXT NOT NULL
+          recipe_name TEXT
         );
         ''');
 
@@ -72,6 +83,9 @@ class AppDb {
         );
         await db.execute(
           'CREATE INDEX idx_steps_recipe ON recipe_steps(recipe_id, pos);',
+        );
+        await db.execute(
+          'CREATE INDEX idx_memos_recipe ON recipe_memos(recipe_id, pos);',
         );
       },
     );

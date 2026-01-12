@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'diary_page.dart';
-import 'cart_page.dart';
+import 'cart_page/maincolumn.dart';
 import "recipe_page/maincolumn.dart";
 
 void main() {
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
         ),
+        textTheme: GoogleFonts.nanumGothicTextTheme(),
       ),
       home: const MyHomePage(),
     );
@@ -64,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
       //const Center(child: Text('장바구니 탭 화면')),
       const RecipePageMainColumn(),
       const DiaryPage(),
-      const CartPage(),
+      const CartPageMainColumn(),
     ];
 
     return Scaffold(

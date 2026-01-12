@@ -5,18 +5,18 @@ import "recipeadditioncard.dart";
 import "recipentry.dart";
 import "../data/recipe_provider.dart";
 import "../classes/recipe.dart";
+import "../widgets/search_field.dart";
 
-
-class AddHeader extends ConsumerStatefulWidget {
-  const AddHeader({
+class RecipeAddHeader extends ConsumerStatefulWidget {
+  const RecipeAddHeader({
     super.key,
   });
 
   @override
-  ConsumerState<AddHeader> createState() => _AddHeaderState();
+  ConsumerState<RecipeAddHeader> createState() => _RecipeAddHeaderState();
 }
 
-class _AddHeaderState extends ConsumerState<AddHeader> {
+class _RecipeAddHeaderState extends ConsumerState<RecipeAddHeader> {
   bool _showRecipeAdditionCard = false;
 
   Future<void> _onSubmit(Recipe recipe) async {
@@ -29,6 +29,7 @@ class _AddHeaderState extends ConsumerState<AddHeader> {
       });
     } catch (e) {
       if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('레시피 저장 중 오류: $e')),
       );
@@ -98,38 +99,6 @@ class _AddHeaderState extends ConsumerState<AddHeader> {
   }
 }
 
-class SearchField extends StatelessWidget {
-  const SearchField({
-    super.key,
-    required this.controller,
-    this.onChanged,
-  });
-
-  final TextEditingController controller;
-  final ValueChanged<String>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: TextField(
-        controller: controller,
-        textInputAction: TextInputAction.search,
-        onChanged: onChanged,
-
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: '검색...',
-          prefixIcon: const Icon(Icons.search, size: 18),
-          border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        ),
-      ),
-    );
-  }
-}
-
-
 class RecipePageMainColumn extends ConsumerStatefulWidget {
   const RecipePageMainColumn({
     super.key,
@@ -157,24 +126,26 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
       data: (recipes) {
         final filteredRecipes = recipes.where((r) => r.name.contains(_filterStr)).toList();
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: filteredRecipes.length + 3,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return AddHeader();
-            } else if (index == 1) {
-              return SearchField(controller: _searchController, onChanged: _onChangedCallback,);
-            } else if (index == 2) {
-              return const Divider(
-                height: 24,
-                thickness: 1,
-                indent: 8,
-                endIndent: 8,
-              );
-            }
-            return RecipeEntry(recipe: filteredRecipes[index - 3]);
-          },
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              RecipeAddHeader(),
+              SearchField(controller: _searchController, onChanged: _onChangedCallback,),
+              Divider(height: 24, thickness: 1, indent: 8, endIndent: 8,),
+              Expanded(
+                child: ListView.builder(
+                  //padding: const EdgeInsets.all(16),
+                  itemCount: filteredRecipes.length,
+                  itemBuilder: (context, index) {
+
+                    //return RecipeEntry(recipe: filteredRecipes[index]);
+                    return RecipePreview(recipe: filteredRecipes[index], pressedCallback: (_) => {});
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       }
     );
