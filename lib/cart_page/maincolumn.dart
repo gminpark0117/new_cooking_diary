@@ -12,10 +12,6 @@ class CartAddHeader extends ConsumerWidget {
   });
 
   final controller = TextEditingController();
-  Future<void> _onSubmit(WidgetRef ref) async {
-      await ref.read(groceryProvider.notifier).upsertGrocery(Grocery(name: controller.text));
-  }
-
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -53,7 +49,14 @@ class CartAddHeader extends ConsumerWidget {
                   ),
                 ),
                 onPressed: () async {
-                  await _onSubmit(ref);
+                  if (controller.text.isEmpty) {
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('재료의 이름을 입력하세요.')),
+                    );
+                    return;
+                  }
+                  await ref.read(groceryProvider.notifier).upsertGrocery(Grocery(name: controller.text));
                 },
                 child: const Icon(Icons.add),
               ),
