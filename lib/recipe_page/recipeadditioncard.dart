@@ -320,18 +320,12 @@ class PaddedRecipeAdditionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) {
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        clipBehavior: Clip.antiAlias,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
-          child: RecipeAdditionCard(titleString: titleString, onSubmitCallback: onSubmitCallback, onCancelCallback: onCancelCallback, initialRecipe: initialRecipe,),
-        ),
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24),
+        child: RecipeAdditionCard(titleString: titleString, onSubmitCallback: onSubmitCallback, onCancelCallback: onCancelCallback, initialRecipe: initialRecipe,),
       ),
     );
   }

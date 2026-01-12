@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:new_cooking_diary/classes/grocery.dart';
-import 'package:new_cooking_diary/recipe_page/recipeadditioncard.dart';
 
 import "../classes/recipe.dart";
-import '../data/recipe_provider.dart';
 import "../data/grocery_provider.dart";
 
 class RecipeDescription extends ConsumerStatefulWidget {
@@ -152,135 +150,6 @@ class _RecipeDescriptionState extends ConsumerState<RecipeDescription> {
   }
 }
 
-
-class RecipeEntryDepreciated extends ConsumerStatefulWidget {
-  const RecipeEntryDepreciated({
-    super.key,
-    required this.recipe,
-  });
-
-  final Recipe recipe;
-
-  @override
-  ConsumerState<RecipeEntryDepreciated> createState() => _RecipeEntryDepreciatedState();
-}
-
-class _RecipeEntryDepreciatedState extends ConsumerState<RecipeEntryDepreciated> {
-  bool _inEditMode = false;
-  final _expansionController = ExpansibleController();
-
-  @override void dispose() {
-    _expansionController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _onSubmit(Recipe recipe) async {
-    try {
-      await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
-
-      if (!mounted) return;
-      setState(() {
-        _inEditMode = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('레시피 저장 중 오류: $e')),
-      );
-    }
-  }
-
-  void _onCancel() {
-    setState(() {
-      _inEditMode = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-
-    final targetChild = _inEditMode
-        ? RecipeAdditionCard(titleString: "레시피 수정", onSubmitCallback: _onSubmit, onCancelCallback: _onCancel, initialRecipe: widget.recipe,)
-        : RecipeDescription(recipe: widget.recipe);
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      clipBehavior: Clip.antiAlias,
-      child: Listener(
-        behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) {
-          FocusManager.instance.primaryFocus?.unfocus();
-        },
-        child: ExpansionTile(
-          controller: _expansionController,
-          maintainState: true,
-          initiallyExpanded: _inEditMode,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          childrenPadding:
-          const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-        
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.edit),
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
-                tooltip: '레시피 수정',
-                onPressed: () {
-                  setState(() {
-                    _expansionController.expand();
-                    _inEditMode = true;
-                  });
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                visualDensity: VisualDensity.compact,
-                tooltip: '레시피 삭제',
-                onPressed: () async {
-                  try {
-                    await ref.read(recipeProvider.notifier).deleteRecipe(
-                        widget.recipe);
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('레시피 삭제 중 오류: $e')),
-                    );
-                  }
-                }
-              ),
-            ],
-          ),
-        
-          title: Text(
-            widget.recipe.name,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          subtitle: widget.recipe.meta().isEmpty
-              ? null
-              : Text(
-            widget.recipe.meta(),
-            style: theme.textTheme.bodySmall,
-          ),
-          children: [targetChild],
-        ),
-      ),
-    );
-  }
-}
-
-
 class RecipePreview extends StatelessWidget {
 
   const RecipePreview({
@@ -354,89 +223,81 @@ class RecipeDetailPage extends StatelessWidget {
         if (didPop) return;
         onGoBackCallback();
       },
-      child: Listener(
-        behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) {
-          FocusManager.instance.primaryFocus?.unfocus();
-        },
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            clipBehavior: Clip.antiAlias,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Header (matches ExpansionTile tile area)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                recipe.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              if (recipe.meta().isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(
-                                  recipe.meta(),
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          clipBehavior: Clip.antiAlias,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              iconSize: 26,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              visualDensity: VisualDensity.standard,
-                              tooltip: '레시피 수정',
-                              onPressed: () {
-                                onEditCallback();
-                              },
+                            Text(
+                              recipe.name,
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline),
-                              iconSize: 26,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              visualDensity: VisualDensity.standard ,
-                              tooltip: '레시피 삭제',
-                              onPressed: onDeleteCallback,
-                            ),
+                            if (recipe.meta().isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                recipe.meta(),
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            iconSize: 26,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            visualDensity: VisualDensity.standard,
+                            tooltip: '레시피 수정',
+                            onPressed: () {
+                              onEditCallback();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            iconSize: 26,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            visualDensity: VisualDensity.standard ,
+                            tooltip: '레시피 삭제',
+                            onPressed: onDeleteCallback,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                ),
 
-                  const Divider(height: 1, thickness: 1),
+                const Divider(height: 1, thickness: 1),
 
-                  // Body (matches ExpansionTile childrenPadding)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
-                    child: RecipeDescription(recipe: recipe),
-                  ),
-                ],
-              ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
+                  child: RecipeDescription(recipe: recipe),
+                ),
+              ],
             ),
           ),
         ),
-        ),
+      ),
     );
   }
 }
@@ -458,3 +319,132 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
+/*
+class RecipeEntryDepreciated extends ConsumerStatefulWidget {
+  const RecipeEntryDepreciated({
+    super.key,
+    required this.recipe,
+  });
+
+  final Recipe recipe;
+
+  @override
+  ConsumerState<RecipeEntryDepreciated> createState() => _RecipeEntryDepreciatedState();
+}
+
+class _RecipeEntryDepreciatedState extends ConsumerState<RecipeEntryDepreciated> {
+  bool _inEditMode = false;
+  final _expansionController = ExpansibleController();
+
+  @override void dispose() {
+    _expansionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onSubmit(Recipe recipe) async {
+    try {
+      await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
+
+      if (!mounted) return;
+      setState(() {
+        _inEditMode = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('레시피 저장 중 오류: $e')),
+      );
+    }
+  }
+
+  void _onCancel() {
+    setState(() {
+      _inEditMode = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+
+    final targetChild = _inEditMode
+        ? RecipeAdditionCard(titleString: "레시피 수정", onSubmitCallback: _onSubmit, onCancelCallback: _onCancel, initialRecipe: widget.recipe,)
+        : RecipeDescription(recipe: widget.recipe);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      clipBehavior: Clip.antiAlias,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        },
+        child: ExpansionTile(
+          controller: _expansionController,
+          maintainState: true,
+          initiallyExpanded: _inEditMode,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          childrenPadding:
+          const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+                tooltip: '레시피 수정',
+                onPressed: () {
+                  setState(() {
+                    _expansionController.expand();
+                    _inEditMode = true;
+                  });
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+                tooltip: '레시피 삭제',
+                onPressed: () async {
+                  try {
+                    await ref.read(recipeProvider.notifier).deleteRecipe(
+                        widget.recipe);
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('레시피 삭제 중 오류: $e')),
+                    );
+                  }
+                }
+              ),
+            ],
+          ),
+
+          title: Text(
+            widget.recipe.name,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          subtitle: widget.recipe.meta().isEmpty
+              ? null
+              : Text(
+            widget.recipe.meta(),
+            style: theme.textTheme.bodySmall,
+          ),
+          children: [targetChild],
+        ),
+      ),
+    );
+  }
+}
+
+*/
