@@ -46,7 +46,7 @@ class DiaryEntryRepository {
   /// Upserts the diary entry row.
   ///
   /// File behavior:
-  /// - If entry.imagePath is null/empty: stores NULL in DB; deletes old managed image (if any). THIS SHOULDN'T HAPPEN -- CHECK FOR NULL BEFORE CALLING
+  /// - If entry.imagePath is null/empty: stores NULL in DB; deletes old managed image (if any).
   /// - If entry.imagePath points outside app-managed directory: copies it into app storage and stores the new path.
   /// - If entry.imagePath already points to app-managed directory: uses it as-is.
   /// - If the image changes, the old managed image is deleted (best-effort).

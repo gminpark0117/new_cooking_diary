@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:new_cooking_diary/classes/grocery.dart';
 import 'package:new_cooking_diary/recipe_page/recipeadditioncard.dart';
 
 import "../classes/recipe.dart";
 import '../data/recipe_provider.dart';
+import "../data/grocery_provider.dart";
 
 class RecipeDescription extends ConsumerStatefulWidget {
   const RecipeDescription({
@@ -70,9 +72,12 @@ class _RecipeDescriptionState extends ConsumerState<RecipeDescription> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
-            onPressed: () {
-              //TODO: implement
-              debugPrint("add to cart pressed, currently checked: $_checkedIngredientIndexes");
+            onPressed: () async {
+              for (final idx in _checkedIngredientIndexes) {
+                await ref.read(groceryProvider.notifier).upsertGrocery(
+                  Grocery(name: widget.recipe.ingredients[idx], recipeName: widget.recipe.name)
+                );
+              }
             },
             child: const Text('장바구니에 추가'),
           ),

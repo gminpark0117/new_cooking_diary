@@ -149,7 +149,6 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return ref.watch(recipeProvider).when(
