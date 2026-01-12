@@ -3,23 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import "recipeadditioncard.dart";
 import "recipentry.dart";
-import "../providers.dart";
-import "../recipe.dart";
+import "../data/recipe_provider.dart";
+import "../classes/recipe.dart";
+import "../widgets/search_field.dart";
 
-
-class AddHeader extends ConsumerStatefulWidget {
-  const AddHeader({
+class RecipeAddHeader extends ConsumerWidget {
+  const RecipeAddHeader({
     super.key,
+    required this.addCallback,
   });
 
-  @override
-  ConsumerState<AddHeader> createState() => _AddHeaderState();
-}
+  final VoidCallback addCallback;
 
-class _AddHeaderState extends ConsumerState<AddHeader> {
-  bool _showRecipeAdditionCard = false;
-
-  Future<void> _onSubmit(Recipe recipe) async {
+  /*Future<void> _onSubmit(Recipe recipe) async {
     try {
       await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
 
@@ -29,6 +25,7 @@ class _AddHeaderState extends ConsumerState<AddHeader> {
       });
     } catch (e) {
       if (!mounted) return;
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('레시피 저장 중 오류: $e')),
       );
@@ -38,10 +35,10 @@ class _AddHeaderState extends ConsumerState<AddHeader> {
     setState(() {
       _showRecipeAdditionCard = false;
     });
-  }
+  }*/
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         Padding(
@@ -52,17 +49,14 @@ class _AddHeaderState extends ConsumerState<AddHeader> {
             child: FilledButton.icon(
               icon: const Icon(Icons.add),
               label: const Text(
-                  '레시피 추가',
+                '레시피 추가',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              onPressed: () {
-                setState(() {
-                  _showRecipeAdditionCard = !_showRecipeAdditionCard;
-                });
-              },
+              onPressed: addCallback,
+
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFB65A2C),
                 foregroundColor: Colors.white,
@@ -73,62 +67,53 @@ class _AddHeaderState extends ConsumerState<AddHeader> {
             ),
           ),
         ),
-        if (_showRecipeAdditionCard)
+        /*if (_showRecipeAdditionCard)
           Listener(
             behavior: HitTestBehavior.translucent,
             onPointerDown: (_) {
               FocusManager.instance.primaryFocus?.unfocus();
             },
             child: Card(
-              elevation: 4,
-              margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: SingleChildScrollView(
-                  child: RecipeAdditionCard(titleString: "새 레시피", onSubmitCallback: _onSubmit, onCancelCallback: _onCancel,),
+                elevation: 4,
+                margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SingleChildScrollView(
+                      child: RecipeAdditionCard(titleString: "새 레시피", onSubmitCallback: _onSubmit, onCancelCallback: _onCancel,),
+                    )
                 )
-              )
             ),
-          )
+          )*/
       ],
     );
   }
 }
 
-class SearchField extends StatelessWidget {
-  const SearchField({
-    super.key,
-    required this.controller,
-    this.onChanged,
-  });
 
-  final TextEditingController controller;
-  final ValueChanged<String>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: TextField(
-        controller: controller,
-        textInputAction: TextInputAction.search,
-        onChanged: onChanged,
-
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: '검색...',
-          prefixIcon: const Icon(Icons.search, size: 18),
-          border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        ),
-      ),
-    );
-  }
+sealed class _DisplayMode {
+  const _DisplayMode();
 }
 
+class _DefaultMode extends _DisplayMode {
+  const _DefaultMode();
+}
+
+class _AddMode extends _DisplayMode {
+  const _AddMode();
+}
+
+class _ViewMode extends _DisplayMode {
+  const _ViewMode(this.recipe);
+  final Recipe recipe;
+}
+
+class _EditMode extends _DisplayMode {
+  const _EditMode(this.initialRecipe);
+  final Recipe initialRecipe;
+}
 
 class RecipePageMainColumn extends ConsumerStatefulWidget {
   const RecipePageMainColumn({
@@ -143,42 +128,138 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
   String _filterStr = '';
   final _searchController = TextEditingController();
 
-  void _onChangedCallback(String filter) {
+  void _searchChangedCallback(String filter) {
     setState(() {
       _filterStr = filter;
     });
   }
 
+  // 콜백 지옥보다는 나은 디자인이 있지 않을까 싶은
+  _DisplayMode _displayMode = _DefaultMode();
+
+  void _fromDefaultViewCallback(Recipe recipe) {
+    setState(() {
+      _displayMode = _ViewMode(recipe);
+    });
+  }
+
+  void _fromDefaultAddCallback() {
+    setState(() {
+      _displayMode = _AddMode();
+    });
+  }
+
+  Future<void> _fromViewDeleteCallback() async {
+    final recipe = switch (_displayMode) {
+      _ViewMode(:final recipe) => recipe,
+      _ => throw StateError('Expected _ViewMode!'),
+    };
+
+    await ref.read(recipeProvider.notifier).deleteRecipe(recipe);
+    setState(() {
+      _displayMode = _DefaultMode();
+    });
+  }
+
+  void _fromViewGoBackCallback() {
+    setState(() {
+      _displayMode = _DefaultMode();
+    });
+  }
+
+  VoidCallback get _fromAddGoBackCallback => _fromViewGoBackCallback;
+
+  void _fromViewEditCallback() {
+    final recipe = switch (_displayMode) {
+      _ViewMode(:final recipe) => recipe,
+      _ => throw StateError('Expected _ViewMode!'),
+    };
+    setState(() {
+      _displayMode = _EditMode(recipe);
+    });
+  }
+
+  void _fromEditGoBackCallback() {
+    final recipe = (_displayMode as _EditMode).initialRecipe;
+
+    setState(() {
+      _displayMode = _ViewMode(recipe);
+    });
+  }
+
+  Future<void> _fromEditConfirmCallback(Recipe recipe) async {
+    await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
+    setState(() {
+      _displayMode = _ViewMode(recipe);
+    });
+  }
+  Future<void> _fromAddSubmitCallback(Recipe recipe) async {
+    await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
+    setState(() {
+      _displayMode = _DefaultMode();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ref.watch(recipeProvider).when(
+
+    final defaultPage = ref.watch(recipeProvider).when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, st) => Center(child: Text('레시피 로딩 중 오류: $e')),
       data: (recipes) {
         final filteredRecipes = recipes.where((r) => r.name.contains(_filterStr)).toList();
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: filteredRecipes.length + 3,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return AddHeader();
-            } else if (index == 1) {
-              return SearchField(controller: _searchController, onChanged: _onChangedCallback,);
-            } else if (index == 2) {
-              return const Divider(
-                height: 24,
-                thickness: 1,
-                indent: 8,
-                endIndent: 8,
-              );
-            }
-            return RecipeEntry(recipe: filteredRecipes[index - 3]);
-          },
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              RecipeAddHeader(addCallback: _fromDefaultAddCallback,),
+              SearchField(controller: _searchController, onChanged: _searchChangedCallback,),
+              Divider(height: 24, thickness: 1, indent: 8, endIndent: 8,),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: filteredRecipes.length,
+                  itemBuilder: (context, index) {
+                    return RecipePreview(recipe: filteredRecipes[index], pressedCallback: _fromDefaultViewCallback);
+                  },
+                ),
+              ),
+            ],
+          ),
         );
       }
     );
+
+    final addPage = PaddedRecipeAdditionCard(
+      titleString: '레시피 추가',
+      onSubmitCallback: _fromAddSubmitCallback,
+      onCancelCallback: _fromAddGoBackCallback,
+    );
+
+    Widget editPage(Recipe recipe) {
+      debugPrint("current recipe: ${recipe.name}");
+    return PaddedRecipeAdditionCard(
+        titleString: '레시피 수정',
+        onSubmitCallback: _fromEditConfirmCallback,
+        onCancelCallback: _fromEditGoBackCallback,
+        initialRecipe: recipe,
+      );
+    }
+
+    Widget viewPage(Recipe recipe) {
+      return RecipeDetailPage(recipe: recipe,
+          onEditCallback: _fromViewEditCallback,
+          onDeleteCallback: _fromViewDeleteCallback,
+          onGoBackCallback: _fromViewGoBackCallback,
+      );
+    }
+
+    return switch (_displayMode) {
+      _DefaultMode() => defaultPage,
+      _AddMode() => addPage,
+      _ViewMode(:final recipe) => viewPage(recipe),
+      _EditMode(:final initialRecipe) => editPage(initialRecipe),
+    };
   }
 }
 

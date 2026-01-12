@@ -1,10 +1,10 @@
 import 'package:uuid/uuid.dart';
-import 'database.dart';
+import '../data/database.dart';
 import 'package:sqflite/sqflite.dart';
 
-var uuid = Uuid();
-class Recipe {
 
+class Recipe {
+  static const Uuid _uuid = Uuid();
   Recipe({
     String? id,
     required this.name,
@@ -12,7 +12,8 @@ class Recipe {
     required this.timeTaken,
     required this.ingredients,
     required this.steps,
-  }) : id = (id ?? uuid.v4());
+    required this.memos,
+  }) : id = (id ?? _uuid.v4());
 
   final String id;
   final String name;
@@ -20,6 +21,13 @@ class Recipe {
   final String? timeTaken;
   final List<String> ingredients;
   final List<String> steps;
+  final List<String> memos;
+  String meta() {
+    return [
+      if (portionSize != null) '분량: $portionSize',
+      if (timeTaken != null) '시간: $timeTaken',
+    ].join(' • ');
+  }
 }
 
 class RecipeRepository {
@@ -33,6 +41,7 @@ class RecipeRepository {
     final recipeRows = await db.query('recipes');
     final ingredientRows = await db.query('recipe_ingredients', orderBy: 'recipe_id, pos');
     final stepRows = await db.query('recipe_steps', orderBy: 'recipe_id, pos');
+    final memoRows = await db.query('recipe_memos', orderBy: 'recipe_id, pos');
 
     final ingredientsBy = <String, List<String>>{};
     for (final r in ingredientRows) {
@@ -46,6 +55,12 @@ class RecipeRepository {
       (stepsBy[rid] ??= []).add(r['text'] as String);
     }
 
+    final memosBy = <String, List<String>>{};
+    for (final r in memoRows) {
+      final rid = r['recipe_id'] as String;
+      (memosBy[rid] ??= []).add(r['text'] as String);
+    }
+
     return recipeRows.map((r) {
       final id = r['id'] as String;
       return Recipe(
@@ -55,6 +70,7 @@ class RecipeRepository {
         portionSize: r['portion'] as String?,
         ingredients: ingredientsBy[id] ?? const [],
         steps: stepsBy[id] ?? const [],
+        memos: memosBy[id] ?? const [],
       );
     }).toList();
   }
@@ -78,6 +94,8 @@ class RecipeRepository {
           where: 'recipe_id = ?', whereArgs: [recipe.id]);
       await txn.delete('recipe_steps',
           where: 'recipe_id = ?', whereArgs: [recipe.id]);
+      await txn.delete('recipe_memos',
+          where: 'recipe_id = ?', whereArgs: [recipe.id]);
 
       final batch = txn.batch();
 
@@ -94,6 +112,14 @@ class RecipeRepository {
           'recipe_id': recipe.id,
           'pos': i,
           'text': recipe.steps[i],
+        });
+      }
+
+      for (var i = 0; i < recipe.memos.length; i++) {
+        batch.insert('recipe_memos', {
+          'recipe_id': recipe.id,
+          'pos': i,
+          'text': recipe.memos[i],
         });
       }
 

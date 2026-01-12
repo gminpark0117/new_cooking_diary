@@ -1,12 +1,8 @@
+import "package:flutter/rendering.dart";
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import "recipe.dart";
+import "../classes/recipe.dart";
 import "database.dart";
-
-class RecipeState {
-  final List<Recipe> recipes;
-  const RecipeState(this.recipes);
-}
 
 class RecipeNotifier extends AsyncNotifier<List<Recipe>> {
   late final _repo = ref.read(recipeRepoProvider);
@@ -17,10 +13,11 @@ class RecipeNotifier extends AsyncNotifier<List<Recipe>> {
   }
 
   List<Recipe> getRecipe({String filter = ''}) {
-    return (state.value ?? []).where((r) => r.name.contains(filter)).toList();
+    return (state.value ?? const <Recipe>[]).where((r) => r.name.contains(filter)).toList();
   }
 
   Future<void> upsertRecipe(Recipe recipe) async {
+    debugPrint("inserting recipe with memos ${recipe.memos}");
     final previous = state.value ?? const <Recipe>[];
     state = AsyncData(_upsertInList(previous, recipe));
 
