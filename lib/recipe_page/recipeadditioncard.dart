@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import "../classes/recipe.dart";
 
-
 class RecipeAdditionCard extends StatefulWidget {
   const RecipeAdditionCard({
     super.key,
@@ -102,180 +101,187 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // 제목
-        Text(
-          widget.titleString,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-
-        // 이름
-        TextField(
-          controller: _nameController,
-          decoration: const InputDecoration(
-            labelText: '레시피 이름',
-            border: OutlineInputBorder(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        widget.onCancelCallback();
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 제목
+          Text(
+            widget.titleString,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-        ),
-        const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-        // 분량, 소요시간
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _portionController,
-                decoration: const InputDecoration(
-                  labelText: '분량 (선택사항)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+          // 이름
+          TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: '레시피 이름',
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _timeController,
-                decoration: const InputDecoration(
-                  labelText: '시간 (선택사항)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 12),
 
-        // 재료
-        _buildSectionHeader('재료', _addIngredient),
-        const SizedBox(height: 8),
-        ..._ingredientControllers.asMap().entries.map((entry) {
-          final index = entry.key;
-          final controller = entry.value;
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      labelText: '재료 ${index + 1}',
-                      border: const OutlineInputBorder(),
-                    ),
+          // 분량, 소요시간
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _portionController,
+                  decoration: const InputDecoration(
+                    labelText: '분량 (선택사항)',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () => _removeIngredient(index),
-                ),
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: 12),
-
-        // 단계
-        _buildSectionHeader('단계', _addStep),
-        const SizedBox(height: 8),
-        ..._stepControllers.asMap().entries.map((entry) {
-          final index = entry.key;
-          final controller = entry.value;
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      labelText: '단계 ${index + 1}',
-                      border: const OutlineInputBorder(),
-                    ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _timeController,
+                  decoration: const InputDecoration(
+                    labelText: '시간 (선택사항)',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () => _removeStep(index),
-                ),
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: 12),
-        // 메모
-        _buildSectionHeader('메모', _addMemo),
-        const SizedBox(height: 8),
-        ..._memoControllers.asMap().entries.map((entry) {
-          final index = entry.key;
-          final controller = entry.value;
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
 
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    maxLines: 2,
-                    decoration: InputDecoration(
-                      labelText: '메모 ${index + 1}',
-                      border: const OutlineInputBorder(),
+          // 재료
+          _buildSectionHeader('재료', _addIngredient),
+          const SizedBox(height: 8),
+          ..._ingredientControllers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final controller = entry.value;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      decoration: InputDecoration(
+                        labelText: '재료 ${index + 1}',
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () => _removeMemo(index),
-                ),
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: 24),
-
-        // 저장, 삭제버튼
-        Row(
-          children: [
-            Expanded(
-              child: FilledButton(
-                onPressed: () async {
-                  if (_nameController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('레시피의 이름을 입력하세요.')),
-                    );
-                    return;
-                  }
-                  await widget.onSubmitCallback(Recipe(
-                        id: widget.initialRecipe?.id,
-                        name: _nameController.text.trim(),
-                        portionSize: _portionController.text.trim().isEmpty ? null : _portionController.text,
-                        timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
-                        ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
-                        steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
-                        memos: _memoControllers.map((controller) => controller.text.trim()).toList(),
-                  ));
-                },
-                child: const Text('레시피 저장'),
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => _removeIngredient(index),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 12),
+            );
+          }),
+          const SizedBox(height: 12),
 
-            Expanded(
-              child: ElevatedButton(
-                onPressed: widget.onCancelCallback,
-                child: const Text('취소'),
+          // 단계
+          _buildSectionHeader('단계', _addStep),
+          const SizedBox(height: 8),
+          ..._stepControllers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final controller = entry.value;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: '단계 ${index + 1}',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => _removeStep(index),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ],
+            );
+          }),
+          const SizedBox(height: 12),
+          // 메모
+          _buildSectionHeader('메모', _addMemo),
+          const SizedBox(height: 8),
+          ..._memoControllers.asMap().entries.map((entry) {
+            final index = entry.key;
+            final controller = entry.value;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: '메모 ${index + 1}',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    onPressed: () => _removeMemo(index),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 24),
+
+          // 저장, 삭제버튼
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton(
+                  onPressed: () async {
+                    if (_nameController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).clearSnackBars();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('레시피의 이름을 입력하세요.')),
+                      );
+                      return;
+                    }
+                    await widget.onSubmitCallback(Recipe(
+                          id: widget.initialRecipe?.id,
+                          name: _nameController.text.trim(),
+                          portionSize: _portionController.text.trim().isEmpty ? null : _portionController.text,
+                          timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
+                          ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
+                          steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
+                          memos: _memoControllers.map((controller) => controller.text.trim()).toList(),
+                    ));
+                  },
+                  child: const Text('레시피 저장'),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: widget.onCancelCallback,
+                  child: const Text('취소'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -292,6 +298,36 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
           onPressed: onAdd,
         ),
       ],
+    );
+  }
+}
+
+class PaddedRecipeAdditionCard extends StatelessWidget {
+  const PaddedRecipeAdditionCard({
+    super.key,
+    required this.titleString,
+    required this.onSubmitCallback,
+    required this.onCancelCallback,
+    this.initialRecipe,
+  });
+
+  final Future<void> Function(Recipe recipe) onSubmitCallback; // 레시피 저장 눌렀을 시의 callback, 에러 핸들링까지 해줘요!
+  final VoidCallback onCancelCallback; // 레시피 취소 눌렀을 시의 callback.
+
+  final Recipe? initialRecipe;
+  final String titleString;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: (_) {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(24),
+        child: RecipeAdditionCard(titleString: titleString, onSubmitCallback: onSubmitCallback, onCancelCallback: onCancelCallback, initialRecipe: initialRecipe,),
+      ),
     );
   }
 }

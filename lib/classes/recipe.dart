@@ -115,7 +115,7 @@ class RecipeRepository {
         });
       }
 
-      for (var i = 0; i < recipe.steps.length; i++) {
+      for (var i = 0; i < recipe.memos.length; i++) {
         batch.insert('recipe_memos', {
           'recipe_id': recipe.id,
           'pos': i,
