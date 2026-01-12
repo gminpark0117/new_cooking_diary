@@ -1,41 +1,56 @@
-import "./recipe.dart";
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import "recipe.dart";
+import "database.dart";
 
 class RecipeState {
   final List<Recipe> recipes;
   const RecipeState(this.recipes);
 }
 
-class RecipeNotifier extends StateNotifier<RecipeState> {
-  RecipeNotifier() : super(RecipeState([]));
+class RecipeNotifier extends AsyncNotifier<List<Recipe>> {
+  late final _repo = ref.read(recipeRepoProvider);
 
-  void addRecipe(Recipe recipe) {
-    state = RecipeState([...state.recipes, recipe]);
+  @override
+  Future<List<Recipe>> build() async {
+    return _repo.getAllRecipe();
   }
 
   List<Recipe> getRecipe({String filter = ''}) {
-    return state.recipes.where((r) => r.name.contains(filter)).toList();
+    return (state.value ?? []).where((r) => r.name.contains(filter)).toList();
   }
 
-  void updateRecipe(Recipe oldRecipe, Recipe newRecipe) {
-    final targetIdx = state.recipes.indexWhere((r) => r.id == oldRecipe.id);
-    if (targetIdx == -1) {
-      throw Exception("exception in RecipeNotifier.updateRecipe: recipe not found in recipe list");
-    }
+  Future<void> upsertRecipe(Recipe recipe) async {
+    final previous = state.value ?? const <Recipe>[];
+    state = AsyncData(_upsertInList(previous, recipe));
 
-    state = RecipeState([
-      ...state.recipes.sublist(0, targetIdx),
-      newRecipe,
-      ...state.recipes.sublist(targetIdx+1),
-    ]);
+    state = await AsyncValue.guard(() async {
+      await _repo.upsertRecipe(recipe);
+      return _repo.getAllRecipe();
+    });
   }
 
-  void deleteRecipe(Recipe recipe) {
-    state = RecipeState(List.of(state.recipes)..remove(recipe));
+  List<Recipe> _upsertInList(List<Recipe> list, Recipe recipe) {
+    final idx = list.indexWhere((r) => r.id == recipe.id);
+    if (idx == -1) return [...list, recipe];
+    return [...list.sublist(0, idx), recipe, ...list.sublist(idx + 1)];
+  }
+
+  Future<void> deleteRecipe(Recipe recipe) async {
+    final previous = state.value ?? const <Recipe>[];
+    state = AsyncData(previous.where((r) => r.id != recipe.id).toList());
+
+    state = await AsyncValue.guard(() async {
+      await _repo.deleteRecipe(recipe);
+      return _repo.getAllRecipe();
+    });
   }
 }
 
 final recipeProvider =
-StateNotifierProvider<RecipeNotifier, RecipeState>((ref) {
-  return RecipeNotifier();
+AsyncNotifierProvider<RecipeNotifier, List<Recipe>>(RecipeNotifier.new);
+
+// AI 말로는 recipeNotifier가 리빌드되도 같은 RecipeRepository 인스턴스를 가리키도록? 얘를 provider로 감싸라네요. 사실 AppDb.instance도 한번 싸야된다는데
+final recipeRepoProvider = Provider<RecipeRepository>((ref) {
+  return RecipeRepository(AppDb.instance);
 });

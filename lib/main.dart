@@ -70,6 +70,11 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 86,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(8),
+          ),
+        ),
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -112,7 +117,10 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      body: pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: pages,
+      ),
 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,

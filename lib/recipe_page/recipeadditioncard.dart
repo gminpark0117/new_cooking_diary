@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import "../recipe.dart";
 
@@ -13,7 +12,7 @@ class RecipeAdditionCard extends StatefulWidget {
     this.initialRecipe,
   });
 
-  final void Function(Recipe recipe) onSubmitCallback; // 레시피 저장 눌렀을 시의 callback.
+  final Future<void> Function(Recipe recipe) onSubmitCallback; // 레시피 저장 눌렀을 시의 callback, 에러 핸들링까지 해줘요!
   final VoidCallback onCancelCallback; // 레시피 취소 눌렀을 시의 callback.
 
   final Recipe? initialRecipe;
@@ -35,8 +34,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     super.initState();
 
     _nameController = TextEditingController(text: widget.initialRecipe?.name ?? '');
-    _portionController = TextEditingController(text: widget.initialRecipe?.portionSize.toString() ?? '');
-    _timeController = TextEditingController(text: widget.initialRecipe?.timeTaken.toString() ?? '');
+    _portionController = TextEditingController(text: widget.initialRecipe?.portionSize ?? '');
+    _timeController = TextEditingController(text: widget.initialRecipe?.timeTaken ?? '');
 
     // wow
     _ingredientControllers = (widget.initialRecipe?.ingredients ?? []).map((ing) => TextEditingController(text: ing)).toList();
@@ -112,12 +111,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
             Expanded(
               child: TextField(
                 controller: _portionController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
                 decoration: const InputDecoration(
-                  labelText: '분량 (인분)',
+                  labelText: '분량 (선택사항)',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -126,12 +121,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
             Expanded(
               child: TextField(
                 controller: _timeController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
                 decoration: const InputDecoration(
-                  labelText: '조리시간 (분)',
+                  labelText: '시간 (선택사항)',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -206,13 +197,20 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
           children: [
             Expanded(
               child: FilledButton(
-                onPressed: () {
-                  widget.onSubmitCallback(Recipe(
-                    portionSize: int.tryParse(_portionController.text.trim())!,
-                    timeTaken: int.tryParse(_timeController.text.trim())!,
-                    name: _nameController.text.trim(),
-                    ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
-                    steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
+                onPressed: () async {
+                  if (_nameController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('레시피의 이름을 입력하세요.')),
+                    );
+                    return;
+                  }
+                  await widget.onSubmitCallback(Recipe(
+                        id: widget.initialRecipe?.id,
+                        name: _nameController.text.trim(),
+                        portionSize: _portionController.text.trim().isEmpty ? null : _portionController.text,
+                        timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
+                        ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
+                        steps: _stepControllers.map((controller) => controller.text.trim()).toList()
                   ));
                 },
                 child: const Text('레시피 저장'),

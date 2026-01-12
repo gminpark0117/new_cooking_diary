@@ -6,6 +6,7 @@ import "recipentry.dart";
 import "../providers.dart";
 import "../recipe.dart";
 
+
 class AddHeader extends ConsumerStatefulWidget {
   const AddHeader({
     super.key,
@@ -18,10 +19,20 @@ class AddHeader extends ConsumerStatefulWidget {
 class _AddHeaderState extends ConsumerState<AddHeader> {
   bool _showRecipeAdditionCard = false;
 
-  void _onSubmit(Recipe recipe) { setState(() {
-      ref.read(recipeProvider.notifier).addRecipe(recipe);
-      _showRecipeAdditionCard = false;
-    });
+  Future<void> _onSubmit(Recipe recipe) async {
+    try {
+      await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
+
+      if (!mounted) return;
+      setState(() {
+        _showRecipeAdditionCard = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('레시피 저장 중 오류: $e')),
+      );
+    }
   }
   void _onCancel() {
     setState(() {
@@ -138,29 +149,35 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
-    ref.watch(recipeProvider);
-    final recipes = ref.read(recipeProvider.notifier).getRecipe(filter: _filterStr);
+    return ref.watch(recipeProvider).when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) => Center(child: Text('레시피 로딩 중 오류: $e')),
+      data: (recipes) {
+        final filteredRecipes = recipes.where((r) => r.name.contains(_filterStr)).toList();
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: recipes.length + 3,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return AddHeader();
-        } else if (index == 1) {
-          return SearchField(controller: _searchController, onChanged: _onChangedCallback,);
-        } else if (index == 2) {
-          return const Divider(
-            height: 24,
-            thickness: 1,
-            indent: 8,
-            endIndent: 8,
-          );
-        }
-        return RecipeEntry(recipe: recipes[index - 3]);
-      },
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: filteredRecipes.length + 3,
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return AddHeader();
+            } else if (index == 1) {
+              return SearchField(controller: _searchController, onChanged: _onChangedCallback,);
+            } else if (index == 2) {
+              return const Divider(
+                height: 24,
+                thickness: 1,
+                indent: 8,
+                endIndent: 8,
+              );
+            }
+            return RecipeEntry(recipe: filteredRecipes[index - 3]);
+          },
+        );
+      }
     );
   }
 }

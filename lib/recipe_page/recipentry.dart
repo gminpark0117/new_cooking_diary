@@ -128,28 +128,42 @@ class RecipeEntry extends ConsumerStatefulWidget {
 
 class _RecipeEntryState extends ConsumerState<RecipeEntry> {
   bool _inEditMode = false;
+  final _expansionController = ExpansibleController();
 
-  void _onSubmit(Recipe newRecipe) {
-    setState(() {
-      _inEditMode = false;
-      ref.read(recipeProvider.notifier).updateRecipe(widget.recipe, newRecipe);
-    });
-
+  @override void dispose() {
+    _expansionController.dispose();
+    super.dispose();
   }
+
+  Future<void> _onSubmit(Recipe recipe) async {
+    try {
+      await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
+
+      if (!mounted) return;
+      setState(() {
+        _inEditMode = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('레시피 저장 중 오류: $e')),
+      );
+    }
+  }
+
   void _onCancel() {
     setState(() {
       _inEditMode = false;
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     final meta = [
-      '분량: ${widget.recipe.portionSize}인분',
-      '소요시간: ${widget.recipe.timeTaken}분',
+      if (widget.recipe.portionSize != null) '분량: ${widget.recipe.portionSize}',
+      if (widget.recipe.timeTaken != null) '시간: ${widget.recipe.timeTaken}',
     ].join(' • ');
 
     final targetChild = _inEditMode
@@ -165,6 +179,7 @@ class _RecipeEntryState extends ConsumerState<RecipeEntry> {
           FocusManager.instance.primaryFocus?.unfocus();
         },
         child: ExpansionTile(
+          controller: _expansionController,
           maintainState: true,
           initiallyExpanded: _inEditMode,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -183,7 +198,7 @@ class _RecipeEntryState extends ConsumerState<RecipeEntry> {
                 tooltip: '레시피 수정',
                 onPressed: () {
                   setState(() {
-                    //TODO: 누르면 자동으로 수정란 튀어나오도록..
+                    _expansionController.expand();
                     _inEditMode = true;
                   });
                 },
@@ -195,9 +210,17 @@ class _RecipeEntryState extends ConsumerState<RecipeEntry> {
                 constraints: const BoxConstraints(),
                 visualDensity: VisualDensity.compact,
                 tooltip: '레시피 삭제',
-                onPressed: () {
-                  ref.read(recipeProvider.notifier).deleteRecipe(widget.recipe);
-                },
+                onPressed: () async {
+                  try {
+                    await ref.read(recipeProvider.notifier).deleteRecipe(
+                        widget.recipe);
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('레시피 삭제 중 오류: $e')),
+                    );
+                  }
+                }
               ),
             ],
           ),
