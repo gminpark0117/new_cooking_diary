@@ -12,6 +12,7 @@ import 'data/diary_entry_provider.dart';
 import 'diary_detail_page.dart';
 import 'utils.dart';
 
+// 얘 왜케 커요. 리팩토링 하기에는 귀찮지만
 class DiaryPage extends ConsumerStatefulWidget {
   const DiaryPage({super.key});
 
@@ -504,7 +505,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                         minLines: 1,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: '메모 (선택사항)',
+                          hintText: '기록',
                           hintStyle: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,

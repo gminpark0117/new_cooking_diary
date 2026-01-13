@@ -57,7 +57,7 @@ class PublicRecipeSimilarity {
       final nameSimBi = _bigramJaccard(queryNameNorm, nameNorm);
       final ingSim = _jaccard(queryIngSet, ingSet);
 
-      final score = 0.55 * ingSim + 0.35 * nameSimBi + 0.10 * nameSimUni;
+      final score = 0.50 * ingSim + 0.35 * nameSimBi + 0.15 * nameSimUni;
       if (score >= _minScore) {
         scored.add((recipe: r, score: score));
       }

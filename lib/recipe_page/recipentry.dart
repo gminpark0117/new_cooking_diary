@@ -348,11 +348,13 @@ class RecipeEntryPage extends ConsumerStatefulWidget {
   const RecipeEntryPage({
   super.key,
   required this.baseRecipe,
+  required this.isPreview,
   required this.onEditCallback,
   required this.onDeleteCallback,
   required this.onGoBackCallback,
   });
   final Recipe baseRecipe;
+  final bool isPreview;
   final VoidCallback onEditCallback; // the parent (mainColumn) should have the recipe info.
   final VoidCallback onDeleteCallback;
   final VoidCallback onGoBackCallback;
@@ -363,12 +365,14 @@ class RecipeEntryPage extends ConsumerStatefulWidget {
 
 class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
   List<Recipe> recipeStack = [];
+  bool isPreview = false;
   Future<List<Recipe>>? _similarFuture;
 
   @override
   void initState() {
     super.initState();
     recipeStack = [widget.baseRecipe];
+    isPreview = widget.isPreview;
     _similarFuture = publicRecipeSimilarity.findSimilar(recipeStack.last);
   }
 
@@ -397,6 +401,9 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
       setState(() {
         recipeStack.removeLast();
         _similarFuture = publicRecipeSimilarity.findSimilar(recipeStack.last);
+        if (recipeStack.length == 1) {
+          isPreview = widget.isPreview;
+        }
       });
     }
   }
@@ -404,6 +411,7 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
   void _pushRecipe(Recipe r) {
     setState(() {
       recipeStack.add(r);
+      isPreview = true;
       _similarFuture = publicRecipeSimilarity.findSimilar(recipeStack.last);
     });
 
@@ -417,7 +425,7 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
         recipe: recipeStack.last,
         onEditCallback: widget.onEditCallback,
         onDeleteCallback: widget.onDeleteCallback,
-        isPreview: widget.baseRecipe.id != recipeStack.last.id,
+        isPreview: isPreview,
       ),
       const Divider(height: 24, thickness: 1, indent: 8, endIndent: 8),
       Padding(
@@ -455,7 +463,7 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
           if (similarRecipes.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text('추천 레시피가 없습니다.'),
+              child: Text('추천 레시피가 없습니다. 미안해용'),
             );
           }
 
@@ -477,7 +485,7 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
       const SizedBox(height: 4),
 
       // Your bottom buttons (same as now)
-      if (recipeStack.length == 1)
+      if (!isPreview)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: ElevatedButton(

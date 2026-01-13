@@ -87,8 +87,9 @@ class _AddMode extends _DisplayMode {
 }
 
 class _ViewMode extends _DisplayMode {
-  const _ViewMode(this.recipe);
+  const _ViewMode(this.recipe, this.isPreview);
   final Recipe recipe;
+  final bool isPreview;
 }
 
 class _EditMode extends _DisplayMode {
@@ -120,9 +121,9 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
   // 콜백 지옥보다는 나은 디자인이 있지 않을까 싶은
   _DisplayMode _displayMode = _DefaultMode();
 
-  void _fromDefaultViewCallback(Recipe recipe) {
+  void _fromDefaultViewCallback(Recipe recipe, bool isPreview) {
     setState(() {
-      _displayMode = _ViewMode(recipe);
+      _displayMode = _ViewMode(recipe, isPreview);
     });
   }
 
@@ -170,7 +171,7 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
     final recipe = (_displayMode as _EditMode).initialRecipe;
 
     setState(() {
-      _displayMode = _ViewMode(recipe);
+      _displayMode = _ViewMode(recipe, false);
     });
   }
 
@@ -178,7 +179,7 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
     final messenger = ScaffoldMessenger.of(context);
     await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
     setState(() {
-      _displayMode = _ViewMode(recipe);
+      _displayMode = _ViewMode(recipe, false);
     });
     messenger.clearSnackBars();
     messenger.showSnackBar(
@@ -216,11 +217,11 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
 
         final filteredRecipes = recipes
             .where((r) => r.name.contains(_filterStr))
-            .map((r) => RecipePreview(recipe: r, pressedCallback: _fromDefaultViewCallback));
+            .map((r) => RecipePreview(recipe: r, pressedCallback: (r) => _fromDefaultViewCallback(r, false))); // 이건 뭔
         if (viewPublicRecipes) {
           final filteredPublicRecipes = publicRecipeSimilarity.cachedPublicRecipes
               .where((r) => r.name.contains(_filterStr))
-              .map((r) => RecipePreview(recipe: r, pressedCallback: _fromDefaultViewCallback));
+              .map((r) => RecipePreview(recipe: r, pressedCallback: (r) => _fromDefaultViewCallback(r, true)));
 
           allRecipes = [...filteredRecipes, Divider(height: 12, thickness: 1, indent: 8, endIndent: 8), SizedBox(height: 8,), ...filteredPublicRecipes];
         } else {
@@ -291,25 +292,26 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
     Widget editPage(Recipe recipe) {
       debugPrint("current recipe: ${recipe.name}");
     return PaddedRecipeAdditionCard(
-        titleString: '레시피 수정',
-        onSubmitCallback: _fromEditConfirmCallback,
-        onCancelCallback: _fromEditGoBackCallback,
-        initialRecipe: recipe,
+      titleString: '레시피 수정',
+      onSubmitCallback: _fromEditConfirmCallback,
+      onCancelCallback: _fromEditGoBackCallback,
+      initialRecipe: recipe,
       );
     }
 
-    Widget viewPage(Recipe recipe) {
+    Widget viewPage(Recipe recipe, bool isPreview) {
       return RecipeEntryPage(baseRecipe: recipe,
-          onEditCallback: _fromViewEditCallback,
-          onDeleteCallback: _fromViewDeleteCallback,
-          onGoBackCallback: _fromViewGoBackCallback,
+        onEditCallback: _fromViewEditCallback,
+        onDeleteCallback: _fromViewDeleteCallback,
+        onGoBackCallback: _fromViewGoBackCallback,
+        isPreview: isPreview,
       );
     }
 
     return switch (_displayMode) {
       _DefaultMode() => defaultPage,
       _AddMode() => addPage,
-      _ViewMode(:final recipe) => viewPage(recipe),
+      _ViewMode(:final recipe, :final isPreview) => viewPage(recipe, isPreview),
       _EditMode(:final initialRecipe) => editPage(initialRecipe),
     };
   }
