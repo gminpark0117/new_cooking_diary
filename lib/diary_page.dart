@@ -209,6 +209,277 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
     final bool canSave = _selectedRecipe != null && _pickedImagePath != null;
     final entriesAsync = ref.watch(diaryProvider);
 
+    if (_inAddMode){
+      return SingleChildScrollView(
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    SizedBox(height: 10),
+                    Text(
+                      '새 요리 기록',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                        color: Colors.black,
+                        height: 1.1,
+                      ),
+                    ),
+                    SizedBox(height: 20),
+
+                  ],
+                ),
+
+                InkWell(
+                  onTap: _pickedImagePath == null ? _showImageSourceSheet : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: double.infinity,
+                    height: 260,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        width: 1.5,
+                      ),
+                      color: Colors.grey.shade50,
+                    ),
+                    child: _pickedImagePath == null
+                        ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.photo_camera_outlined,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          '사진을 추가하세요',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    )
+                        : Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(_pickedImagePath!),
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          right: 8,
+                          child: InkWell(
+                            onTap: _showImageSourceSheet,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.edit,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        
+
+        
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: _openRecipePicker,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300, width: 1.5),
+                    ),
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _selectedRecipe?.name ?? '레시피를 선택하세요',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.keyboard_arrow_down,
+                          color: Colors.grey.shade600,
+                          size: 28,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                TextField(
+                  controller: _memoController,
+                  minLines: 1,
+                  maxLines: 10000,
+                  decoration: InputDecoration(
+                    hintText: '기록',
+                    hintStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFB65A2C),
+                        width: 1.8,
+                      ),
+                    ),
+                  ),
+                ),
+        
+                const SizedBox(height: 24),
+        
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          setState(() {
+                            _inAddMode = false;
+                          });
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.grey,
+                          side: BorderSide(
+                            color: Colors.grey.shade300,
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text(
+                          '취소',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: canSave
+                            ? () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final recipe = _selectedRecipe!;
+                          final imagePath = _pickedImagePath!;
+                          final memo = _memoController.text.trim();
+        
+                          await ref.read(diaryProvider.notifier).upsertEntry(
+                            DiaryEntry(
+                              recipeName: recipe.name,
+                              imagePath: imagePath,
+                              note: memo.isEmpty ? null : memo,
+                              createdAt: DateTime.now(),
+                            ),
+                          );
+                          messenger.clearSnackBars();
+                          messenger.showSnackBar(
+                            const SnackBar(content: Text('기록을 추가하였습니다.')),
+                          );
+        
+                          setState(() {
+                            _inAddMode = false;
+                            _selectedRecipe = null;
+                            _pickedImagePath = null;
+                            _memoController.clear();
+                          });
+        
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _scrollController.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                            );
+                          });
+                        }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB65A2C),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text(
+                          '저장',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: SingleChildScrollView(
@@ -424,280 +695,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
             // const SizedBox(height: 0),
 
             // 새 기록 입력 영역
-            if (_inAddMode)
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          SizedBox(height: 10),
-                          Text(
-                            '새 요리 기록',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                              color: Colors.black,
-                              height: 1.1,
-                            ),
-                          ),
-                          SizedBox(height: 20),
-                          Text(
-                            '레시피 선택',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black54,
-                              height: 1.1,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 7),
 
-                      InkWell(
-                        onTap: _openRecipePicker,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300, width: 1.5),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _selectedRecipe?.name ?? '레시피를 선택하세요',
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                              Icon(
-                                Icons.keyboard_arrow_down,
-                                color: Colors.grey.shade600,
-                                size: 28,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      TextField(
-                        controller: _memoController,
-                        minLines: 1,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          hintText: '기록',
-                          hintStyle: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black54,
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFB65A2C),
-                              width: 1.8,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      InkWell(
-                        onTap: _pickedImagePath == null ? _showImageSourceSheet : null,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: double.infinity,
-                          height: 260,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
-                            ),
-                            color: Colors.grey.shade50,
-                          ),
-                          child: _pickedImagePath == null
-                              ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(
-                                Icons.photo_camera_outlined,
-                                size: 48,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                '사진을 추가하세요',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          )
-                              : Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  File(_pickedImagePath!),
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 8,
-                                right: 8,
-                                child: InkWell(
-                                  onTap: _showImageSourceSheet,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.black54,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit,
-                                      size: 18,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _inAddMode = false;
-                                });
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.grey,
-                                side: BorderSide(
-                                  color: Colors.grey.shade300,
-                                  width: 1.5,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                              ),
-                              child: const Text(
-                                '취소',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: canSave
-                                  ? () async {
-                                final messenger = ScaffoldMessenger.of(context);
-                                final recipe = _selectedRecipe!;
-                                final imagePath = _pickedImagePath!;
-                                final memo = _memoController.text.trim();
-
-                                await ref.read(diaryProvider.notifier).upsertEntry(
-                                  DiaryEntry(
-                                    recipeName: recipe.name,
-                                    imagePath: imagePath,
-                                    note: memo.isEmpty ? null : memo,
-                                    createdAt: DateTime.now(),
-                                  ),
-                                );
-                                messenger.clearSnackBars();
-                                messenger.showSnackBar(
-                                  const SnackBar(content: Text('기록을 추가하였습니다.')),
-                                );
-
-                                setState(() {
-                                  _inAddMode = false;
-                                  _selectedRecipe = null;
-                                  _pickedImagePath = null;
-                                  _memoController.clear();
-                                });
-
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
-                                  _scrollController.animateTo(
-                                    0,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeOut,
-                                  );
-                                });
-                              }
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFB65A2C),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                              ),
-                              child: const Text(
-                                '저장',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
             const SizedBox(height: 8),
 
