@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import "../classes/grocery.dart";
 
-
 class GroceryEditCard extends StatefulWidget {
   const GroceryEditCard({
     super.key,
@@ -13,7 +12,6 @@ class GroceryEditCard extends StatefulWidget {
 
   final Future<void> Function(Grocery grocery) onSubmitCallback;
   final VoidCallback onCancelCallback;
-
   final Grocery initialGrocery;
 
   @override
@@ -22,20 +20,16 @@ class GroceryEditCard extends StatefulWidget {
 
 class _GroceryEditCardState extends State<GroceryEditCard> {
   late final TextEditingController _nameController;
-  late final TextEditingController _recipeNameController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialGrocery.name);
-    _recipeNameController = TextEditingController(text: widget.initialGrocery.recipeName ?? '');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _recipeNameController.dispose();
-
     super.dispose();
   }
 
@@ -44,73 +38,95 @@ class _GroceryEditCardState extends State<GroceryEditCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /*// 제목
-        Text(
-          "재료 수정",
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        TextField(
+          controller: _nameController,
+          style: const TextStyle(color: Colors.black),
+          decoration: InputDecoration(
+            labelText: '재료명',
+            labelStyle: const TextStyle(color: Colors.black54),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFB65A2C), width: 1.8),
+            ),
+          ),
         ),
-        const SizedBox(height: 16),*/
+        const SizedBox(height: 12),
 
-        // name, recipeName
         Row(
           children: [
+            // 취소(왼쪽)
             Expanded(
-              flex: 2,
-              child: TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: '재료명',
-                  border: OutlineInputBorder(),
+              child: OutlinedButton(
+                onPressed: widget.onCancelCallback,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey,
+                  side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text(
+                  '취소',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _recipeNameController,
-                decoration: const InputDecoration(
-                  labelText: 'placeholder for now..',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
 
-        // 저장, 삭제버튼
-        Row(
-          children: [
+            // 재료 수정(오른쪽)
             Expanded(
-              child: FilledButton(
+              child: ElevatedButton(
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
-                  if (_nameController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
+
+                  final newName = _nameController.text.trim();
+                  if (newName.isEmpty) {
+                    messenger.clearSnackBars();
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('재료의 이름을 입력하세요.')),
                     );
                     return;
                   }
-                  await widget.onSubmitCallback(Grocery(
+
+                  final oldName = widget.initialGrocery.name.trim();
+
+                  await widget.onSubmitCallback(
+                    Grocery(
                       id: widget.initialGrocery.id,
-                      name: _nameController.text.trim(),
-                      recipeName: _recipeNameController.text.trim().isEmpty ? null : _recipeNameController.text.trim(),
-                  ));
+                      name: newName,
+
+                      // ✅ 이름이 바뀌면 출처 레시피는 끊는다(표시도 사라짐)
+                      recipeName: (newName == oldName) ? widget.initialGrocery.recipeName : null,
+                    ),
+                  );
+
                   messenger.clearSnackBars();
                   messenger.showSnackBar(
                     const SnackBar(content: Text('재료를 수정하였습니다.')),
                   );
                 },
-                child: const Text('재료 수정'),
-              ),
-            ),
-            const SizedBox(width: 12),
 
-            Expanded(
-              child: ElevatedButton(
-                onPressed: widget.onCancelCallback,
-                child: const Text('취소'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFB65A2C),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text(
+                  '재료 수정',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],

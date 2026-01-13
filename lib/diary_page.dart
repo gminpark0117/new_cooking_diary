@@ -32,9 +32,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
   Recipe? _selectedRecipe;
   final TextEditingController _memoController = TextEditingController();
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImageFrom(ImageSource source) async {
     final XFile? file = await _picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
       imageQuality: 85,
     );
 
@@ -43,6 +43,54 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
         _pickedImagePath = file.path;
       });
     }
+  }
+
+  Future<void> _showImageSourceSheet() async {
+    if (!mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('갤러리에서 선택'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickImageFrom(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('카메라로 촬영'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickImageFrom(ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _openRecipePicker() async {
@@ -479,7 +527,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                       const SizedBox(height: 12),
 
                       InkWell(
-                        onTap: _pickedImagePath == null ? _pickImage : null,
+                        onTap: _pickedImagePath == null ? _showImageSourceSheet : null,
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           width: double.infinity,
@@ -527,7 +575,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                                 bottom: 8,
                                 right: 8,
                                 child: InkWell(
-                                  onTap: _pickImage,
+                                  onTap: _showImageSourceSheet,
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
                                     decoration: const BoxDecoration(

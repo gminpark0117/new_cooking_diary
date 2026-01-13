@@ -1,20 +1,133 @@
 import 'package:flutter/material.dart';
-import 'package:new_cooking_diary/classes/grocery.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:new_cooking_diary/classes/grocery.dart';
 import '../data/grocery_provider.dart';
 import '../widgets/search_field.dart';
 import 'groceryentry.dart';
 
-class CartAddHeader extends ConsumerWidget {
-  CartAddHeader({
+class CartAddHeader extends ConsumerStatefulWidget {
+  const CartAddHeader({
     super.key,
+    required this.selectionMode,
+    required this.selectAllLabel,
+    required this.onEnterSelectionMode,
+    required this.onCancel,
+    required this.onToggleSelectAll,
+    required this.onDeleteSelected,
+    required this.deleteEnabled,
   });
 
-  final controller = TextEditingController();
+  final bool selectionMode;
+  final String selectAllLabel;
+  final VoidCallback onEnterSelectionMode;
+  final VoidCallback onCancel;
+  final VoidCallback onToggleSelectAll;
+  final VoidCallback onDeleteSelected;
+  final bool deleteEnabled;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CartAddHeader> createState() => _CartAddHeaderState();
+}
+
+class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
+  late final TextEditingController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ✅ 삭제 선택 모드 UI
+    if (widget.selectionMode) {
+      return SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Row(
+            children: [
+              // 취소
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: widget.onCancel,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.grey.shade700,
+                      side: BorderSide(color: Colors.grey.shade400),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: const Text(
+                      '취소',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // 전체 선택/해제
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: ElevatedButton(
+                    onPressed: widget.onToggleSelectAll,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade800,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      widget.selectAllLabel,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // 삭제
+              SizedBox(
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: widget.deleteEnabled ? widget.onDeleteSelected : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text(
+                    '삭제',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ✅ 일반 모드 UI (재료 입력 + 빨간 휴지통 버튼)
     return SafeArea(
       bottom: false,
       child: Padding(
@@ -25,7 +138,7 @@ class CartAddHeader extends ConsumerWidget {
               child: TextField(
                 controller: controller,
                 decoration: InputDecoration(
-                  hintText: '재료를 추가하세요..',
+                  hintText: '재료를 추가하세요',
                   isDense: true,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -38,11 +151,14 @@ class CartAddHeader extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
+
             SizedBox(
               height: 44,
               width: 44,
               child: FilledButton(
                 style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFB65A2C),
+                  foregroundColor: Colors.white,
                   padding: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -50,20 +166,49 @@ class CartAddHeader extends ConsumerWidget {
                 ),
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
-                  if (controller.text.isEmpty) {
+
+                  final name = controller.text.trim(); // ✅ 공백 제거
+                  if (name.isEmpty) {
                     messenger.clearSnackBars();
                     messenger.showSnackBar(
                       const SnackBar(content: Text('재료의 이름을 입력하세요.')),
                     );
                     return;
                   }
-                  await ref.read(groceryProvider.notifier).upsertGrocery(Grocery(name: controller.text));
+
+                  await ref
+                      .read(groceryProvider.notifier)
+                      .upsertGrocery(Grocery(name: name));
+
+                  controller.clear(); // ✅ 입력칸 비우기
+
                   messenger.clearSnackBars();
                   messenger.showSnackBar(
                     const SnackBar(content: Text('재료를 추가하였습니다.')),
                   );
                 },
                 child: const Icon(Icons.add),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // ✅ 빨간 휴지통 버튼
+            SizedBox(
+              height: 44,
+              width: 44,
+              child: ElevatedButton(
+                onPressed: widget.onEnterSelectionMode,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Icon(Icons.delete_outline, size: 22),
               ),
             ),
           ],
@@ -75,6 +220,7 @@ class CartAddHeader extends ConsumerWidget {
 
 class CartPageMainColumn extends ConsumerStatefulWidget {
   const CartPageMainColumn({super.key});
+
   @override
   ConsumerState<CartPageMainColumn> createState() => _CartPageMainColumnState();
 }
@@ -82,6 +228,9 @@ class CartPageMainColumn extends ConsumerStatefulWidget {
 class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
   String _filterStr = '';
   final _searchController = TextEditingController();
+
+  bool _selectionMode = false;
+  final Set<String> _selectedIds = {};
 
   void _onChangedCallback(String filter) {
     setState(() {
@@ -95,18 +244,69 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, st) => Center(child: Text('재료 로딩 중 오류: $e')),
       data: (groceries) {
-        final filteredGroceries = groceries.where((g) =>
-          g.name.contains(_filterStr) || (g.recipeName?.contains(_filterStr) ?? false)
-        ).toList();
+        final filteredGroceries = groceries
+            .where(
+              (g) =>
+          g.name.contains(_filterStr) ||
+              (g.recipeName?.contains(_filterStr) ?? false),
+        )
+            .toList();
+
+        final allIds = filteredGroceries.map((g) => g.id).toSet();
+        final isAllSelected =
+            allIds.isNotEmpty && _selectedIds.length == allIds.length;
+        final selectAllLabel = isAllSelected ? '전체 해제' : '전체 선택';
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: filteredGroceries.length + 3,
           itemBuilder: (context, index) {
             if (index == 0) {
-              return CartAddHeader();
+              return CartAddHeader(
+                selectionMode: _selectionMode,
+                selectAllLabel: selectAllLabel,
+                deleteEnabled: _selectedIds.isNotEmpty,
+                onEnterSelectionMode: () {
+                  setState(() {
+                    _selectionMode = true;
+                    _selectedIds.clear();
+                  });
+                },
+                onCancel: () {
+                  setState(() {
+                    _selectionMode = false;
+                    _selectedIds.clear();
+                  });
+                },
+                onToggleSelectAll: () {
+                  setState(() {
+                    if (isAllSelected) {
+                      _selectedIds.clear();
+                    } else {
+                      _selectedIds
+                        ..clear()
+                        ..addAll(allIds);
+                    }
+                  });
+                },
+                onDeleteSelected: () async {
+                  final targets = filteredGroceries
+                      .where((g) => _selectedIds.contains(g.id));
+                  for (final g in targets) {
+                    await ref.read(groceryProvider.notifier).deleteGrocery(g);
+                  }
+                  if (!mounted) return;
+                  setState(() {
+                    _selectionMode = false;
+                    _selectedIds.clear();
+                  });
+                },
+              );
             } else if (index == 1) {
-              return SearchField(controller: _searchController, onChanged: _onChangedCallback,);
+              return SearchField(
+                controller: _searchController,
+                onChanged: _onChangedCallback,
+              );
             } else if (index == 2) {
               return const Divider(
                 height: 24,
@@ -115,7 +315,23 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
                 endIndent: 8,
               );
             }
-            return GroceryEntry(grocery: filteredGroceries[index-3]);
+
+            final grocery = filteredGroceries[index - 3];
+
+            return GroceryEntry(
+              grocery: grocery,
+              selectionMode: _selectionMode,
+              selected: _selectedIds.contains(grocery.id),
+              onSelectedChanged: (checked) {
+                setState(() {
+                  if (checked == true) {
+                    _selectedIds.add(grocery.id);
+                  } else {
+                    _selectedIds.remove(grocery.id);
+                  }
+                });
+              },
+            );
           },
         );
       },

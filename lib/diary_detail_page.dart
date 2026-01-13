@@ -37,11 +37,11 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
+  Future<void> _pickImageFrom(ImageSource source) async {
     if (!_isEditing) return;
 
     final file = await _picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
       imageQuality: 85,
     );
 
@@ -52,11 +52,60 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
     }
   }
 
+  Future<void> _showImageSourceSheet() async {
+    if (!_isEditing) return;
+    if (!mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('갤러리에서 선택'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickImageFrom(ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('카메라로 촬영'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickImageFrom(ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _save() async {
     final messenger = ScaffoldMessenger.of(context);
     await ref.read(diaryProvider.notifier).upsertEntry(
       DiaryEntry(
-        id: widget.entry.id, // ⭐ 기존 기록 업데이트
+        id: widget.entry.id, // 기존 기록 업데이트
         recipeName: widget.entry.recipeName,
         imagePath: _imagePath,
         note: _memoController.text.trim().isEmpty
@@ -119,7 +168,7 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
                     bottom: 12,
                     right: 12,
                     child: InkWell(
-                      onTap: _pickImage,
+                      onTap: _showImageSourceSheet,
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: const BoxDecoration(
