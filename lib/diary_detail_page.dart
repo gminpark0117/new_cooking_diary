@@ -111,6 +111,7 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
         note: _memoController.text.trim().isEmpty
             ? null
             : _memoController.text.trim(),
+        createdAt: widget.entry.createdAt,
       ),
     );
     messenger.clearSnackBars();

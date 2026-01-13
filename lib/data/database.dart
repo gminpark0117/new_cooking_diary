@@ -66,7 +66,8 @@ class AppDb {
             id TEXT PRIMARY KEY,
             image_path TEXT,
             recipe_name TEXT NOT NULL,
-            note TEXT
+            note TEXT,
+            created_at INTEGER NOT NULL
           );
           '''); //TODO: create index?
 

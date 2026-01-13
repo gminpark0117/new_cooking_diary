@@ -253,7 +253,7 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        '외부 레시피도\n보기',
+                        '외부 레시피도\n 같이 보기',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           height: 1.0,

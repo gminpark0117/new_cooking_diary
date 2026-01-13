@@ -641,6 +641,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                                     recipeName: recipe.name,
                                     imagePath: imagePath,
                                     note: memo.isEmpty ? null : memo,
+                                    createdAt: DateTime.now(),
                                   ),
                                 );
                                 messenger.clearSnackBars();
