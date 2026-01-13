@@ -99,8 +99,72 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
+
+    final ingredientRows = <Widget>[];
+    for (int i = 0; i < _ingredientControllers.length; i += 2) {
+      ingredientRows.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Expanded(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _ingredientControllers[i],
+                          decoration: InputDecoration(
+                            labelText: '재료 ${i+1}',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        iconSize: 20,
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () => _removeIngredient(i),
+                      ),
+                    ],
+                  )
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: (i + 1 < _ingredientControllers.length)
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _ingredientControllers[i+1],
+                              decoration: InputDecoration(
+                                labelText: '재료 ${i+2}',
+                                border: const OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            iconSize: 20,
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.remove_circle_outline),
+                            onPressed: () => _removeIngredient(i+1),
+                          ),
+                        ],
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -157,31 +221,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
           // 재료
           _buildSectionHeader('재료', _addIngredient),
           const SizedBox(height: 8),
-          ..._ingredientControllers.asMap().entries.map((entry) {
-            final index = entry.key;
-            final controller = entry.value;
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: controller,
-                      decoration: InputDecoration(
-                        labelText: '재료 ${index + 1}',
-                        border: const OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () => _removeIngredient(index),
-                  ),
-                ],
-              ),
-            );
-          }),
+          ...ingredientRows,
           const SizedBox(height: 12),
 
           // 단계
@@ -259,13 +299,13 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                       return;
                     }
                     await widget.onSubmitCallback(Recipe(
-                          id: widget.initialRecipe?.id,
-                          name: _nameController.text.trim(),
-                          portionSize: _portionController.text.trim().isEmpty ? null : _portionController.text,
-                          timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
-                          ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
-                          steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
-                          memos: _memoControllers.map((controller) => controller.text.trim()).toList(),
+                      id: widget.initialRecipe?.id,
+                      name: _nameController.text.trim(),
+                      portionSize: _portionController.text.trim().isEmpty ? null : _portionController.text,
+                      timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
+                      ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
+                      steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
+                      memos: _memoControllers.map((controller) => controller.text.trim()).toList(),
                     ));
                   },
                   child: const Text('레시피 저장'),

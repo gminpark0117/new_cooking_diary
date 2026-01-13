@@ -76,7 +76,7 @@ flutter:
   assets:
     - assets/splash/
     - assets/icon/
-
+    - assets/db/public_recipes.db
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

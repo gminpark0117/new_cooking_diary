@@ -5,8 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'diary_page.dart';
 import 'cart_page/maincolumn.dart';
 import "recipe_page/maincolumn.dart";
+import "public_db/public_search.dart";
+final publicRecipeSimilarity = PublicRecipeSimilarity();
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await publicRecipeSimilarity.warmUp();
   runApp(
     ProviderScope(
       child: MyApp(),
@@ -37,19 +41,22 @@ class MyApp extends StatelessWidget {
 }
 
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends ConsumerStatefulWidget {
   const MyHomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  ConsumerState<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends ConsumerState<MyHomePage> {
   int _selectedIndex = 0; // pages[0]이 탭1이라서 기본화면이 탭1
 
 
   // 탭 눌렀을 때 바꾸는 함수
   void _onItemTapped(int index) {
+    if (index == 0) {
+      ref.read(tab0TapTokenProvider.notifier).state++;
+    }
     setState(() {
       _selectedIndex = index;
     });

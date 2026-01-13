@@ -15,27 +15,6 @@ class RecipeAddHeader extends ConsumerWidget {
 
   final VoidCallback addCallback;
 
-  /*Future<void> _onSubmit(Recipe recipe) async {
-    try {
-      await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
-
-      if (!mounted) return;
-      setState(() {
-        _showRecipeAdditionCard = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('레시피 저장 중 오류: $e')),
-      );
-    }
-  }
-  void _onCancel() {
-    setState(() {
-      _showRecipeAdditionCard = false;
-    });
-  }*/
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,6 +71,7 @@ class RecipeAddHeader extends ConsumerWidget {
   }
 }
 
+final tab0TapTokenProvider = StateProvider<int>((ref) => 0);
 
 sealed class _DisplayMode {
   const _DisplayMode();
@@ -200,8 +180,14 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<int>(tab0TapTokenProvider, (prev, next) {
+      setState(() {
+        _displayMode = _DefaultMode();
+      });
+    });
 
     final defaultPage = ref.watch(recipeProvider).when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -247,7 +233,7 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
     }
 
     Widget viewPage(Recipe recipe) {
-      return RecipeDetailPage(recipe: recipe,
+      return RecipeEntryPage(baseRecipe: recipe,
           onEditCallback: _fromViewEditCallback,
           onDeleteCallback: _fromViewDeleteCallback,
           onGoBackCallback: _fromViewGoBackCallback,
