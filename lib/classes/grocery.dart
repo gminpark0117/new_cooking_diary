@@ -25,7 +25,11 @@ class GroceryRepository {
   Future<List<Grocery>> getAllGroceries() async {
     final db = await _db.db;
 
-    final rows = await db.query('groceries');
+    final rows = await db.query(
+      'groceries',
+      orderBy: 'rowid DESC', // 최신 수정된 것이 맨 위
+    );
+
     return rows.map((r) {
       return Grocery(
         id: r['id'] as String,

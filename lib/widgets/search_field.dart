@@ -21,8 +21,8 @@ class SearchField extends StatelessWidget {
 
         decoration: InputDecoration(
           isDense: true,
-          hintText: '검색...',
-          prefixIcon: const Icon(Icons.search, size: 18),
+          hintText: '검색',
+          prefixIcon: const Icon(Icons.search, size: 22),
           border: const OutlineInputBorder(),
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),

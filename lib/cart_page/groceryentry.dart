@@ -9,24 +9,39 @@ class GroceryEntry extends ConsumerStatefulWidget {
   const GroceryEntry({
     super.key,
     required this.grocery,
+    required this.selectionMode,
+    required this.selected,
+    required this.onSelectedChanged,
   });
 
   final Grocery grocery;
+
+  final bool selectionMode;
+  final bool selected;
+  final ValueChanged<bool?> onSelectedChanged;
 
   @override
   ConsumerState<GroceryEntry> createState() => _GroceryEntryTileState();
 }
 
 class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
-  bool _isChecked = false;
+  bool _isChecked = false; // (개인 체크용)
   bool _isEditMode = false;
+
+  static const Color brandColor = Color(0xFFB65A2C);
 
   Future<void> _onSubmitEdit(Grocery grocery) async {
     await ref.read(groceryProvider.notifier).upsertGrocery(grocery);
+
+    if (!mounted) return;
     setState(() {
       _isEditMode = false;
       _isChecked = false;
     });
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars();
+    messenger.showSnackBar(const SnackBar(content: Text('재료를 수정하였습니다.')));
   }
 
   void _onCancelEdit() {
@@ -39,82 +54,76 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final titleStyle = theme.textTheme.bodyLarge?.copyWith(
-      decoration: _isChecked ? TextDecoration.lineThrough : null,
-      color: _isChecked ? Colors.blueGrey : null,
-    );
+    final hasRecipe =
+        widget.grocery.recipeName != null && widget.grocery.recipeName!.trim().isNotEmpty;
 
-    final subtitleStyle = theme.textTheme.labelSmall?.copyWith(
-      decoration: _isChecked ? TextDecoration.lineThrough : null,
-      color: _isChecked ? Colors.blueGrey : null,
-    );
-
-    final normalState = Card(
+    final tile = Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           children: [
-            // Left toggle
             Checkbox(
-              value: _isChecked,
+              activeColor: brandColor,
+              value: widget.selectionMode ? widget.selected : _isChecked,
               onChanged: (b) {
-                setState(() {
-                  _isChecked = b ?? false;
-                });
+                if (widget.selectionMode) {
+                  widget.onSelectedChanged(b);
+                  return;
+                }
+                setState(() => _isChecked = b ?? false);
               },
             ),
 
-            // Main text area
+            // ✅ 이름 + (있으면) 레시피 표시
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.grocery.name, style: titleStyle, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  if (widget.grocery.recipeName != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 0),
-                      child: Text(
-                        "레시피: ${widget.grocery.recipeName!}",
-                        style: subtitleStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  Text(
+                    widget.grocery.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      decoration: _isChecked ? TextDecoration.lineThrough : null,
+                    ),
+                  ),
+
+                  if (hasRecipe) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '레시피: ${widget.grocery.recipeName!.trim()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: Colors.black54,
+                        decoration: _isChecked ? TextDecoration.lineThrough : null,
                       ),
                     ),
+                  ],
                 ],
               ),
             ),
 
-            // Right actions
-            IconButton(
-              icon: const Icon(Icons.edit),
-              iconSize: 18,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              visualDensity: VisualDensity.compact,
-              tooltip: '재료 수정',
-              onPressed: () {
-                setState(() {
-                  _isEditMode = true;
-                });
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              iconSize: 18,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              visualDensity: VisualDensity.compact,
-              tooltip: '삭제',
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                await ref.read(groceryProvider.notifier).deleteGrocery(widget.grocery);
-                messenger.clearSnackBars();
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('재료를 삭제하였습니다.')),
-                );
-              },
-            ),
+            // ✅ selectionMode일 때는 우측 아이콘 숨기기
+            if (!widget.selectionMode)
+              IconButton(
+                icon: const Icon(Icons.edit),
+                color: brandColor, // ✅ 체크박스와 같은 색
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
+                tooltip: '재료 수정',
+                onPressed: () => setState(() => _isEditMode = true),
+              ),
           ],
         ),
       ),
@@ -122,26 +131,26 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
 
     final editState = Listener(
       behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) {
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Card(
-          elevation: 4,
-          margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      onPointerDown: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: GroceryEditCard(
+            onSubmitCallback: _onSubmitEdit,
+            onCancelCallback: _onCancelEdit,
+            initialGrocery: widget.grocery,
           ),
-          child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: SingleChildScrollView(
-                child: GroceryEditCard(
-                    onSubmitCallback: _onSubmitEdit,
-                    onCancelCallback: _onCancelEdit,
-                    initialGrocery: widget.grocery),
-              )
-          )
+        ),
       ),
     );
-    return _isEditMode ? editState : normalState;
+
+    if (widget.selectionMode) return tile;
+    return _isEditMode ? editState : tile;
   }
 }
