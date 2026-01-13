@@ -239,9 +239,7 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
   final Set<String> _selectedIds = {};
 
   void _onChangedCallback(String filter) {
-    setState(() {
-      _filterStr = filter;
-    });
+    setState(() => _filterStr = filter);
   }
 
   @override
@@ -251,11 +249,9 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
       error: (e, st) => Center(child: Text('재료 로딩 중 오류: $e')),
       data: (groceries) {
         final filteredGroceries = groceries
-            .where(
-              (g) =>
-          g.name.contains(_filterStr) ||
-              (g.recipeName?.contains(_filterStr) ?? false),
-        )
+            .where((g) =>
+        g.name.contains(_filterStr) ||
+            (g.recipeName?.contains(_filterStr) ?? false))
             .toList();
 
         final allIds = filteredGroceries.map((g) => g.id).toSet();
@@ -264,7 +260,6 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
         final selectAllLabel = isAllSelected ? '전체 해제' : '전체 선택';
 
         return ListView.builder(
-          // ✅ 2페이지처럼 화면 전체를 16으로 감싸는 효과
           padding: const EdgeInsets.all(16),
           itemCount: filteredGroceries.length + 3,
           itemBuilder: (context, index) {
@@ -273,18 +268,26 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
                 selectionMode: _selectionMode,
                 selectAllLabel: selectAllLabel,
                 deleteEnabled: _selectedIds.isNotEmpty,
+
+                // ✅ 휴지통 진입 시: DB에서 checked=true인 애들을 선택 상태로 넘김
                 onEnterSelectionMode: () {
                   setState(() {
                     _selectionMode = true;
-                    _selectedIds.clear();
+                    _selectedIds
+                      ..clear()
+                      ..addAll(filteredGroceries
+                          .where((g) => g.checked)
+                          .map((g) => g.id));
                   });
                 },
+
                 onCancel: () {
                   setState(() {
                     _selectionMode = false;
                     _selectedIds.clear();
                   });
                 },
+
                 onToggleSelectAll: () {
                   setState(() {
                     if (isAllSelected) {
@@ -296,13 +299,17 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
                     }
                   });
                 },
+
                 onDeleteSelected: () async {
                   final targets =
                   filteredGroceries.where((g) => _selectedIds.contains(g.id));
+
                   for (final g in targets) {
                     await ref.read(groceryProvider.notifier).deleteGrocery(g);
                   }
+
                   if (!mounted) return;
+
                   setState(() {
                     _selectionMode = false;
                     _selectedIds.clear();
@@ -310,7 +317,6 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
                 },
               );
             } else if (index == 1) {
-              // ✅ SearchField 자체의 좌우 padding을 제거했으니 여기서는 간격만
               return Padding(
                 padding: const EdgeInsets.only(top: 8, bottom: 4),
                 child: SearchField(
@@ -319,26 +325,34 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
                 ),
               );
             } else if (index == 2) {
-              return const Divider(
-                height: 24,
-                thickness: 1,
-              );
+              return const Divider(height: 24, thickness: 1);
             }
 
             final grocery = filteredGroceries[index - 3];
 
             return GroceryEntry(
+              key: ValueKey(grocery.id), // ✅ 상태 뒤바뀜 방지
+
               grocery: grocery,
               selectionMode: _selectionMode,
               selected: _selectedIds.contains(grocery.id),
-              onSelectedChanged: (checked) {
+              onSelectedChanged: (checkedSel) {
                 setState(() {
-                  if (checked == true) {
+                  if (checkedSel == true) {
                     _selectedIds.add(grocery.id);
                   } else {
                     _selectedIds.remove(grocery.id);
                   }
                 });
+              },
+
+              // ✅ 기본 체크는 DB 값
+              checked: grocery.checked,
+              onCheckedChanged: (b) async {
+                await ref.read(groceryProvider.notifier).setChecked(
+                  id: grocery.id,
+                  checked: b ?? false,
+                );
               },
             );
           },
@@ -347,3 +361,4 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
     );
   }
 }
+
