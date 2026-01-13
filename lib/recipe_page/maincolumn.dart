@@ -243,23 +243,25 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
                       onChanged: _searchChangedCallback,
                     ),
                   ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Switch(
-                        value: viewPublicRecipes,
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (val) => setState(() => viewPublicRecipes = val),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        '외부 레시피도\n 같이 보기',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          height: 1.0,
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Switch(
+                          value: viewPublicRecipes,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          onChanged: (val) => setState(() => viewPublicRecipes = val),
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 2),
+                        Text(
+                          '외부 레시피도\n 같이 보기',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
