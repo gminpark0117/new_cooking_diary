@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'classes/recipe.dart';
 import 'diary_page.dart';
 import 'cart_page/maincolumn.dart';
 import "recipe_page/maincolumn.dart";
 import "public_db/public_search.dart";
-final publicRecipeSimilarity = PublicRecipeSimilarity();
+final publicRecipeSimilarity = PublicRecipeSimilarity.instance;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
