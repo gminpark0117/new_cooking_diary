@@ -1,4 +1,3 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:characters/characters.dart';
 
 import 'public_db.dart';

@@ -21,7 +21,7 @@ class DiaryPage extends ConsumerStatefulWidget {
 }
 
 class _DiaryPageState extends ConsumerState<DiaryPage> {
-  bool _showAddArea = false;
+  bool _inAddMode = false;
 
   bool _selectionMode = false; // 삭제 선택 모드 여부
   final Set<String> _selectedIds = {}; // 선택된 diaryEntry id들
@@ -351,15 +351,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                     child: ElevatedButton.icon(
                       onPressed: () {
                         setState(() {
-                          _showAddArea = !_showAddArea;
-                          if (_showAddArea) {
+                          _inAddMode = !_inAddMode;
+                          if (_inAddMode) {
                             _selectedRecipe = null;
                             _pickedImagePath = null;
                             _memoController.clear();
                           }
                         });
 
-                        if (_showAddArea) {
+                        if (_inAddMode) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             _scrollController.animateTo(
                               0,
@@ -424,7 +424,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
             // const SizedBox(height: 0),
 
             // 새 기록 입력 영역
-            if (_showAddArea)
+            if (_inAddMode)
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -612,7 +612,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                             child: OutlinedButton(
                               onPressed: () {
                                 setState(() {
-                                  _showAddArea = false;
+                                  _inAddMode = false;
                                 });
                               },
                               style: OutlinedButton.styleFrom(
@@ -659,7 +659,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                                 );
 
                                 setState(() {
-                                  _showAddArea = false;
+                                  _inAddMode = false;
                                   _selectedRecipe = null;
                                   _pickedImagePath = null;
                                   _memoController.clear();
