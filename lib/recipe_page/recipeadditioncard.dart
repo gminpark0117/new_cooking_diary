@@ -291,9 +291,10 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
               Expanded(
                 child: FilledButton(
                   onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
                     if (_nameController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.clearSnackBars();
+                      messenger.showSnackBar(
                         const SnackBar(content: Text('레시피의 이름을 입력하세요.')),
                       );
                       return;

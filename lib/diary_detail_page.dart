@@ -53,6 +53,7 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
   }
 
   Future<void> _save() async {
+    final messenger = ScaffoldMessenger.of(context);
     await ref.read(diaryProvider.notifier).upsertEntry(
       DiaryEntry(
         id: widget.entry.id, // ⭐ 기존 기록 업데이트
@@ -62,6 +63,10 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
             ? null
             : _memoController.text.trim(),
       ),
+    );
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
+      const SnackBar(content: Text('기록을 수정하였습니다.')),
     );
 
     if (mounted) {

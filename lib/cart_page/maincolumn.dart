@@ -49,14 +49,19 @@ class CartAddHeader extends ConsumerWidget {
                   ),
                 ),
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   if (controller.text.isEmpty) {
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.clearSnackBars();
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('재료의 이름을 입력하세요.')),
                     );
                     return;
                   }
                   await ref.read(groceryProvider.notifier).upsertGrocery(Grocery(name: controller.text));
+                  messenger.clearSnackBars();
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('재료를 추가하였습니다.')),
+                  );
                 },
                 child: const Icon(Icons.add),
               ),
@@ -88,7 +93,7 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
   Widget build(BuildContext context) {
     return ref.watch(groceryProvider).when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('장바구니 로딩 중 오류: $e')),
+      error: (e, st) => Center(child: Text('재료 로딩 중 오류: $e')),
       data: (groceries) {
         final filteredGroceries = groceries.where((g) =>
           g.name.contains(_filterStr) || (g.recipeName?.contains(_filterStr) ?? false)

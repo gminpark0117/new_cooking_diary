@@ -84,6 +84,7 @@ class _GroceryEditCardState extends State<GroceryEditCard> {
             Expanded(
               child: FilledButton(
                 onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
                   if (_nameController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).clearSnackBars();
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -96,6 +97,10 @@ class _GroceryEditCardState extends State<GroceryEditCard> {
                       name: _nameController.text.trim(),
                       recipeName: _recipeNameController.text.trim().isEmpty ? null : _recipeNameController.text.trim(),
                   ));
+                  messenger.clearSnackBars();
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('재료를 수정하였습니다.')),
+                  );
                 },
                 child: const Text('재료 수정'),
               ),

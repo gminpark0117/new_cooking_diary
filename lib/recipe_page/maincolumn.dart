@@ -130,12 +130,16 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
   }
 
   Future<void> _fromViewDeleteCallback() async {
+    final messenger = ScaffoldMessenger.of(context);
     final recipe = switch (_displayMode) {
       _ViewMode(:final recipe) => recipe,
       _ => throw StateError('Expected _ViewMode!'),
     };
-
     await ref.read(recipeProvider.notifier).deleteRecipe(recipe);
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
+      const SnackBar(content: Text('레시피를 삭제하였습니다.')),
+    );
     setState(() {
       _displayMode = _DefaultMode();
     });
@@ -168,16 +172,27 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
   }
 
   Future<void> _fromEditConfirmCallback(Recipe recipe) async {
+    final messenger = ScaffoldMessenger.of(context);
     await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
     setState(() {
       _displayMode = _ViewMode(recipe);
     });
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
+      const SnackBar(content: Text('레시피를 수정하였습니다.')),
+    );
+    
   }
   Future<void> _fromAddSubmitCallback(Recipe recipe) async {
+    final messenger = ScaffoldMessenger.of(context);
     await ref.read(recipeProvider.notifier).upsertRecipe(recipe);
     setState(() {
       _displayMode = _DefaultMode();
     });
+    messenger.clearSnackBars();
+    messenger.showSnackBar(
+      const SnackBar(content: Text('레시피를 추가하였습니다.')),
+    );
   }
 
 

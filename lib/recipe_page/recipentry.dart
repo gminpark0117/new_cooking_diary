@@ -6,7 +6,6 @@ import 'package:new_cooking_diary/main.dart';
 
 import "../classes/recipe.dart";
 import "../data/grocery_provider.dart";
-import "../public_db/public_search.dart";
 
 
 class RecipePreview extends StatelessWidget {
@@ -65,13 +64,15 @@ class RecipeDetail extends StatelessWidget {
     required this.recipe,
     required this.onEditCallback,
     required this.onDeleteCallback,
+    required this.isPreview,
   });
 
   final Recipe recipe;
-  final publicRecipeSimilarity = PublicRecipeSimilarity();
+  final bool isPreview;
 
   final VoidCallback onEditCallback; // the parent (mainColumn) should have the recipe info.
   final VoidCallback onDeleteCallback;
+
 
   @override
   Widget build(BuildContext context) {
@@ -109,31 +110,32 @@ class RecipeDetail extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        iconSize: 26,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        visualDensity: VisualDensity.standard,
-                        tooltip: '레시피 수정',
-                        onPressed: () {
-                          onEditCallback();
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        iconSize: 26,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        visualDensity: VisualDensity.standard ,
-                        tooltip: '레시피 삭제',
-                        onPressed: onDeleteCallback,
-                      ),
-                    ],
-                  ),
+                  if (!isPreview)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          iconSize: 26,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          visualDensity: VisualDensity.standard,
+                          tooltip: '레시피 수정',
+                          onPressed: () {
+                            onEditCallback();
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          iconSize: 26,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          visualDensity: VisualDensity.standard ,
+                          tooltip: '레시피 삭제',
+                          onPressed: onDeleteCallback,
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -415,6 +417,7 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
         recipe: recipeStack.last,
         onEditCallback: widget.onEditCallback,
         onDeleteCallback: widget.onDeleteCallback,
+        isPreview: widget.baseRecipe.id != recipeStack.last.id,
       ),
       const Divider(height: 24, thickness: 1, indent: 8, endIndent: 8),
       Padding(

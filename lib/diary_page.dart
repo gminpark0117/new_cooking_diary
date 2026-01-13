@@ -123,7 +123,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                       )
                           : ListView.separated(
                         itemCount: filteredRecipes.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final r = filteredRecipes[index];
                           return ListTile(
@@ -260,9 +260,14 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                         : () async {
                       final entries = entriesAsync.value ?? [];
                       final targets = entries.where((e) => _selectedIds.contains(e.id));
+                      final messenger = ScaffoldMessenger.of(context);
                       for (final entry in targets) {
                         await ref.read(diaryProvider.notifier).deleteEntry(entry);
                       }
+                      messenger.clearSnackBars();
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('기록을 삭제하였습니다.')),
+                      );
 
                       setState(() {
                         _selectionMode = false;
@@ -578,6 +583,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                             child: ElevatedButton(
                               onPressed: canSave
                                   ? () async {
+                                final messenger = ScaffoldMessenger.of(context);
                                 final recipe = _selectedRecipe!;
                                 final imagePath = _pickedImagePath!;
                                 final memo = _memoController.text.trim();
@@ -588,6 +594,10 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                                     imagePath: imagePath,
                                     note: memo.isEmpty ? null : memo,
                                   ),
+                                );
+                                messenger.clearSnackBars();
+                                messenger.showSnackBar(
+                                  const SnackBar(content: Text('기록을 추가하였습니다.')),
                                 );
 
                                 setState(() {

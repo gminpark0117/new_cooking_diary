@@ -107,7 +107,12 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
               visualDensity: VisualDensity.compact,
               tooltip: '삭제',
               onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 await ref.read(groceryProvider.notifier).deleteGrocery(widget.grocery);
+                messenger.clearSnackBars();
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('재료를 삭제하였습니다.')),
+                );
               },
             ),
           ],
