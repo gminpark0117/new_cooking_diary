@@ -383,7 +383,7 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
     if (!_scrollController.hasClients) return;
     _scrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
   }
