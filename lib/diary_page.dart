@@ -119,7 +119,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // 🔍 검색창
+                    // 검색창
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextField(
@@ -214,7 +214,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ✅ 상단 Row
+            // 상단 Row
             Row(
               children: _selectionMode
                   ? [
@@ -413,9 +413,15 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
               ],
             ),
 
-            const SizedBox(height: 16),
+            // 상단 Row 아래 구분선 추가 (3페이지와 동일 규격)
+            const SizedBox(height: 8),
+            const Divider(
+              height: 24,
+              thickness: 1,
+            ),
+            // const SizedBox(height: 0),
 
-            // ✅ 새 기록 입력 영역
+            // 새 기록 입력 영역
             if (_showAddArea)
               Container(
                 decoration: BoxDecoration(
@@ -505,7 +511,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                           ),
                           filled: true,
                           fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
@@ -689,9 +696,9 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                 ),
               ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
-            // ✅ 기록 목록
+            // 기록 목록
             entriesAsync.when(
               loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 24),
@@ -762,7 +769,8 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      if (entry.note != null && entry.note!.trim().isNotEmpty) ...[
+                                      if (entry.note != null &&
+                                          entry.note!.trim().isNotEmpty) ...[
                                         const SizedBox(height: 6),
                                         Text(
                                           entry.note!.trim(),
@@ -781,7 +789,6 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                             ),
                           ),
                         ),
-
                         if (_selectionMode)
                           Positioned(
                             top: 8,

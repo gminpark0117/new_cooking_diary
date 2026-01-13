@@ -47,18 +47,19 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 삭제 선택 모드 UI
+    // ✅ 삭제 선택 모드 UI (2페이지 상단 버튼 규격에 맞춤)
     if (widget.selectionMode) {
       return SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          // ⚠️ ListView에서 이미 all:16 주기 때문에 좌우 16 중복 방지 -> bottom 간격만
+          padding: const EdgeInsets.only(bottom: 8),
           child: Row(
             children: [
               // 취소
               Expanded(
                 child: SizedBox(
-                  height: 44,
+                  height: 52, // ✅ 2페이지 기준
                   child: OutlinedButton(
                     onPressed: widget.onCancel,
                     style: OutlinedButton.styleFrom(
@@ -81,7 +82,7 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
               // 전체 선택/해제
               Expanded(
                 child: SizedBox(
-                  height: 44,
+                  height: 52, // ✅ 2페이지 기준
                   child: ElevatedButton(
                     onPressed: widget.onToggleSelectAll,
                     style: ElevatedButton.styleFrom(
@@ -103,7 +104,7 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
 
               // 삭제
               SizedBox(
-                height: 44,
+                height: 52, // ✅ 2페이지 기준
                 child: ElevatedButton(
                   onPressed: widget.deleteEnabled ? widget.onDeleteSelected : null,
                   style: ElevatedButton.styleFrom(
@@ -127,34 +128,39 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
       );
     }
 
-    // ✅ 일반 모드 UI (재료 입력 + 빨간 휴지통 버튼)
+    // ✅ 일반 모드 UI (재료 입력 + + 버튼 + 휴지통 버튼) -> 2페이지 상단 규격과 통일
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        // ⚠️ ListView에서 all:16 주기 때문에 좌우 16 중복 방지 -> bottom 간격만
+        padding: const EdgeInsets.only(bottom: 8),
         child: Row(
           children: [
             Expanded(
-              child: TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  hintText: '재료를 추가하세요',
-                  isDense: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
+              child: SizedBox(
+                height: 52, // ✅ 2페이지 기준
+                child: TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: '재료를 추가하세요',
+                    isDense: true,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14, // ✅ 52 높이에 맞는 값
+                    ),
                   ),
                 ),
               ),
             ),
             const SizedBox(width: 8),
 
+            // + 버튼 (52x52로 통일)
             SizedBox(
-              height: 44,
-              width: 44,
+              height: 52,
+              width: 52,
               child: FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFFB65A2C),
@@ -167,7 +173,7 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
                 onPressed: () async {
                   final messenger = ScaffoldMessenger.of(context);
 
-                  final name = controller.text.trim(); // ✅ 공백 제거
+                  final name = controller.text.trim();
                   if (name.isEmpty) {
                     messenger.clearSnackBars();
                     messenger.showSnackBar(
@@ -180,7 +186,7 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
                       .read(groceryProvider.notifier)
                       .upsertGrocery(Grocery(name: name));
 
-                  controller.clear(); // ✅ 입력칸 비우기
+                  controller.clear();
 
                   messenger.clearSnackBars();
                   messenger.showSnackBar(
@@ -193,10 +199,10 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
 
             const SizedBox(width: 8),
 
-            // ✅ 빨간 휴지통 버튼
+            // 휴지통 버튼 (52x52로 통일)
             SizedBox(
-              height: 44,
-              width: 44,
+              height: 52,
+              width: 52,
               child: ElevatedButton(
                 onPressed: widget.onEnterSelectionMode,
                 style: ElevatedButton.styleFrom(
@@ -208,7 +214,7 @@ class _CartAddHeaderState extends ConsumerState<CartAddHeader> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Icon(Icons.delete_outline, size: 22),
+                child: const Icon(Icons.delete_outline, size: 24),
               ),
             ),
           ],
@@ -258,6 +264,7 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
         final selectAllLabel = isAllSelected ? '전체 해제' : '전체 선택';
 
         return ListView.builder(
+          // ✅ 2페이지처럼 화면 전체를 16으로 감싸는 효과
           padding: const EdgeInsets.all(16),
           itemCount: filteredGroceries.length + 3,
           itemBuilder: (context, index) {
@@ -290,8 +297,8 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
                   });
                 },
                 onDeleteSelected: () async {
-                  final targets = filteredGroceries
-                      .where((g) => _selectedIds.contains(g.id));
+                  final targets =
+                  filteredGroceries.where((g) => _selectedIds.contains(g.id));
                   for (final g in targets) {
                     await ref.read(groceryProvider.notifier).deleteGrocery(g);
                   }
@@ -303,16 +310,18 @@ class _CartPageMainColumnState extends ConsumerState<CartPageMainColumn> {
                 },
               );
             } else if (index == 1) {
-              return SearchField(
-                controller: _searchController,
-                onChanged: _onChangedCallback,
+              // ✅ SearchField 자체의 좌우 padding을 제거했으니 여기서는 간격만
+              return Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 4),
+                child: SearchField(
+                  controller: _searchController,
+                  onChanged: _onChangedCallback,
+                ),
               );
             } else if (index == 2) {
               return const Divider(
                 height: 24,
                 thickness: 1,
-                indent: 8,
-                endIndent: 8,
               );
             }
 

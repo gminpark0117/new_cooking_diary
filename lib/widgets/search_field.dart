@@ -12,20 +12,16 @@ class SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: TextField(
-        controller: controller,
-        textInputAction: TextInputAction.search,
-        onChanged: onChanged,
-
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: '검색',
-          prefixIcon: const Icon(Icons.search, size: 22),
-          border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        ),
+    return TextField(
+      controller: controller,
+      textInputAction: TextInputAction.search,
+      onChanged: onChanged,
+      decoration: const InputDecoration(
+        isDense: true,
+        hintText: '검색',
+        prefixIcon: Icon(Icons.search, size: 22),
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
   }

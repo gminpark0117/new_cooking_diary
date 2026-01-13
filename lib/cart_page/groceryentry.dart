@@ -58,7 +58,8 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
         widget.grocery.recipeName != null && widget.grocery.recipeName!.trim().isNotEmpty;
 
     final tile = Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      // ✅ 좌우 16 제거: ListView padding(16) 기준선에 맞춤
+      margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -80,7 +81,6 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
               },
             ),
 
-            // ✅ 이름 + (있으면) 레시피 표시
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,11 +112,10 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
               ),
             ),
 
-            // ✅ selectionMode일 때는 우측 아이콘 숨기기
             if (!widget.selectionMode)
               IconButton(
                 icon: const Icon(Icons.edit),
-                color: brandColor, // ✅ 체크박스와 같은 색
+                color: brandColor,
                 iconSize: 18,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -133,7 +132,8 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
       behavior: HitTestBehavior.translucent,
       onPointerDown: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        // ✅ 좌우 16 제거: ListView padding(16) 기준선에 맞춤
+        margin: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
