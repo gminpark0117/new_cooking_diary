@@ -12,6 +12,7 @@ class DiaryEntry {
     String? id,
     this.imagePath,
     required this.recipeName,
+    required this.createdAt,
     this.note,
   }) : id = id ?? _uuid.v4();
 
@@ -19,6 +20,7 @@ class DiaryEntry {
   final String? imagePath;
   final String recipeName;
   final String? note;
+  final DateTime createdAt;
 }
 
 class DiaryEntryRepository {
@@ -39,6 +41,9 @@ class DiaryEntryRepository {
         imagePath: r['image_path'] as String?,
         recipeName: r['recipe_name'] as String,
         note: r['note'] as String?,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+          (r['created_at'] as int?) ?? 0,
+        ),
       );
     }).toList();
   }
@@ -85,6 +90,7 @@ class DiaryEntryRepository {
             'image_path': newStoredPath,
             'recipe_name': entry.recipeName,
             'note': entry.note,
+            'created_at': entry.createdAt.millisecondsSinceEpoch,
           },
           conflictAlgorithm: ConflictAlgorithm.replace,
         );
@@ -111,6 +117,7 @@ class DiaryEntryRepository {
       imagePath: newStoredPath,
       recipeName: entry.recipeName,
       note: entry.note,
+      createdAt: entry.createdAt,
     );
   }
 

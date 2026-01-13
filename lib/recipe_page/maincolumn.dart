@@ -6,6 +6,7 @@ import "recipentry.dart";
 import "../data/recipe_provider.dart";
 import "../classes/recipe.dart";
 import "../widgets/search_field.dart";
+import '../main.dart';
 
 class RecipeAddHeader extends ConsumerWidget {
   const RecipeAddHeader({
@@ -108,6 +109,8 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
   String _filterStr = '';
   final _searchController = TextEditingController();
 
+  bool viewPublicRecipes = false;
+
   void _searchChangedCallback(String filter) {
     setState(() {
       _filterStr = filter;
@@ -208,20 +211,68 @@ class _RecipePageMainColumnState extends ConsumerState<RecipePageMainColumn> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, st) => Center(child: Text('레시피 로딩 중 오류: $e')),
       data: (recipes) {
-        final filteredRecipes = recipes.where((r) => r.name.contains(_filterStr)).toList();
+
+        final List<Widget> allRecipes;
+
+        final filteredRecipes = recipes
+            .where((r) => r.name.contains(_filterStr))
+            .map((r) => RecipePreview(recipe: r, pressedCallback: _fromDefaultViewCallback));
+        if (viewPublicRecipes) {
+          final filteredPublicRecipes = publicRecipeSimilarity.cachedPublicRecipes
+              .where((r) => r.name.contains(_filterStr))
+              .map((r) => RecipePreview(recipe: r, pressedCallback: _fromDefaultViewCallback));
+
+          allRecipes = [...filteredRecipes, Divider(height: 12, thickness: 1, indent: 8, endIndent: 8), SizedBox(height: 8,), ...filteredPublicRecipes];
+        } else {
+          allRecipes = filteredRecipes.toList();
+        }
+
 
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
               RecipeAddHeader(addCallback: _fromDefaultAddCallback,),
-              SearchField(controller: _searchController, onChanged: _searchChangedCallback,),
-              Divider(height: 24, thickness: 1, indent: 8, endIndent: 8,),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: SearchField(
+                      controller: _searchController,
+                      onChanged: _searchChangedCallback,
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Switch(
+                          value: viewPublicRecipes,
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          onChanged: (val) => setState(() => viewPublicRecipes = val),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          '외부 레시피도\n 같이 보기',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            height: 1.0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              Divider(height: 24, thickness: 1, indent: 0, endIndent: 0,),
+              //SizedBox(height: 8,),
               Expanded(
                 child: ListView.builder(
-                  itemCount: filteredRecipes.length,
+                  itemCount: allRecipes.length,
                   itemBuilder: (context, index) {
-                    return RecipePreview(recipe: filteredRecipes[index], pressedCallback: _fromDefaultViewCallback);
+                    return allRecipes[index];
                   },
                 ),
               ),

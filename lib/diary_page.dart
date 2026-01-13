@@ -10,6 +10,7 @@ import 'classes/diary_entry.dart';
 import 'data/recipe_provider.dart';
 import 'data/diary_entry_provider.dart';
 import 'diary_detail_page.dart';
+import 'utils.dart';
 
 class DiaryPage extends ConsumerStatefulWidget {
   const DiaryPage({super.key});
@@ -648,6 +649,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                                     recipeName: recipe.name,
                                     imagePath: imagePath,
                                     note: memo.isEmpty ? null : memo,
+                                    createdAt: DateTime.now(),
                                   ),
                                 );
                                 messenger.clearSnackBars();
@@ -766,9 +768,20 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        maxLines: 1,
+                                        maxLines: 100,
                                         overflow: TextOverflow.ellipsis,
                                       ),
+
+                                      Text(
+                                        formatYyyyMmDd(entry.createdAt),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black54,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+
                                       if (entry.note != null &&
                                           entry.note!.trim().isNotEmpty) ...[
                                         const SizedBox(height: 6),

@@ -423,7 +423,7 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
       Padding(
         padding: const EdgeInsets.only(top: 4, bottom: 12, left: 20),
         child: Text(
-          '비슷한 추천 레시피:',
+          '이런 레시피도 있어요!',
           style: Theme
               .of(context)
               .textTheme
