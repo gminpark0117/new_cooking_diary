@@ -12,6 +12,10 @@ class GroceryEntry extends ConsumerStatefulWidget {
     required this.selectionMode,
     required this.selected,
     required this.onSelectedChanged,
+
+    // ✅ 추가
+    required this.checked,
+    required this.onCheckedChanged,
   });
 
   final Grocery grocery;
@@ -20,12 +24,15 @@ class GroceryEntry extends ConsumerStatefulWidget {
   final bool selected;
   final ValueChanged<bool?> onSelectedChanged;
 
+  // ✅ 기본 탭 체크(가로줄)
+  final bool checked;
+  final ValueChanged<bool?> onCheckedChanged;
+
   @override
   ConsumerState<GroceryEntry> createState() => _GroceryEntryTileState();
 }
 
 class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
-  bool _isChecked = false; // (개인 체크용)
   bool _isEditMode = false;
 
   static const Color brandColor = Color(0xFFB65A2C);
@@ -36,7 +43,6 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
     if (!mounted) return;
     setState(() {
       _isEditMode = false;
-      _isChecked = false;
     });
 
     final messenger = ScaffoldMessenger.of(context);
@@ -57,8 +63,11 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
     final hasRecipe =
         widget.grocery.recipeName != null && widget.grocery.recipeName!.trim().isNotEmpty;
 
+    final bool isCheckedForStrike = widget.selectionMode
+        ? widget.selected // 선택모드에서는 selected 기준으로 줄 그어도 되고(원하면)
+        : widget.checked;  // 기본모드에서는 checked 기준
+
     final tile = Container(
-      // ✅ 좌우 16 제거: ListView padding(16) 기준선에 맞춤
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -71,13 +80,13 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
           children: [
             Checkbox(
               activeColor: brandColor,
-              value: widget.selectionMode ? widget.selected : _isChecked,
+              value: widget.selectionMode ? widget.selected : widget.checked,
               onChanged: (b) {
                 if (widget.selectionMode) {
                   widget.onSelectedChanged(b);
-                  return;
+                } else {
+                  widget.onCheckedChanged(b);
                 }
-                setState(() => _isChecked = b ?? false);
               },
             ),
 
@@ -92,7 +101,7 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.black,
                       fontWeight: FontWeight.bold,
-                      decoration: _isChecked ? TextDecoration.lineThrough : null,
+                      decoration: isCheckedForStrike ? TextDecoration.lineThrough : null,
                     ),
                   ),
 
@@ -104,7 +113,7 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: Colors.black54,
-                        decoration: _isChecked ? TextDecoration.lineThrough : null,
+                        decoration: isCheckedForStrike ? TextDecoration.lineThrough : null,
                       ),
                     ),
                   ],
@@ -132,7 +141,6 @@ class _GroceryEntryTileState extends ConsumerState<GroceryEntry> {
       behavior: HitTestBehavior.translucent,
       onPointerDown: (_) => FocusManager.instance.primaryFocus?.unfocus(),
       child: Container(
-        // ✅ 좌우 16 제거: ListView padding(16) 기준선에 맞춤
         margin: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white,
