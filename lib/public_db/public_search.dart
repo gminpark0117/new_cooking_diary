@@ -18,7 +18,7 @@ class PublicRecipeSimilarity {
   static const Set<String> _staples = {
     "소금", "설탕", "후추", "물", "식용유", "올리브유", "참기름",
     "간장", "국간장", "다진마늘", "마늘", "파", "대파", "양파",
-    "고춧가루", "고추장", "된장", "통깨", "다진 마늘", "맛술"
+    "고춧가루", "고추장", "된장", "통깨", "다진 마늘", "맛술", "밥", "깨소금"
   };
 
   List<Recipe>? _cacheRecipes;
@@ -109,6 +109,8 @@ class PublicRecipeSimilarity {
         ingredients: ingsById[id] ?? const [],
         steps: stepsById[id] ?? const [],
         memos: const [],
+        mainImagePath: null,
+        stepImagePaths: List<String?>.filled((stepsById[id] ?? const []).length, null, growable: true),
       );
     }).toList();
   }

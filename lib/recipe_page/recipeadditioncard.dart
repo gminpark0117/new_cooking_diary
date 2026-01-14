@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import "../classes/recipe.dart";
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class RecipeAdditionCard extends StatefulWidget {
   const RecipeAdditionCard({
@@ -28,6 +30,11 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
   late final List<TextEditingController> _ingredientControllers;
   late final List<TextEditingController> _stepControllers;
   late final List<TextEditingController> _memoControllers;
+
+  final _picker = ImagePicker();
+  String? _pickedMainImagePath;
+  List<String?> _pickedStepImagePaths = [];
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +47,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     _ingredientControllers = (widget.initialRecipe?.ingredients ?? []).map((ing) => TextEditingController(text: ing)).toList();
     _stepControllers = (widget.initialRecipe?.steps ?? []).map((step) => TextEditingController(text: step)).toList();
     _memoControllers = (widget.initialRecipe?.memos ?? []).map((memo) => TextEditingController(text: memo)).toList();
+    _pickedMainImagePath = widget.initialRecipe?.mainImagePath;
+    _pickedStepImagePaths = widget.initialRecipe?.stepImagePaths ?? [];
   }
 
   @override
@@ -69,6 +78,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
   void _addStep() {
     setState(() {
       _stepControllers.add(TextEditingController());
+      _pickedStepImagePaths.add(null);
     });
   }
 
@@ -89,6 +99,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     setState(() {
       _stepControllers[index].dispose();
       _stepControllers.removeAt(index);
+      _pickedStepImagePaths.removeAt(index);
     });
   }
 
@@ -99,6 +110,63 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     });
   }
 
+  Future<void> _pickImageFrom(ImageSource source, void Function(String path) callbackWithFilePath) async {
+    final XFile? file = await _picker.pickImage(
+      source: source,
+      imageQuality: 85,
+    );
+    if (file != null) {
+      callbackWithFilePath(file.path);
+    }
+  }
+
+  Future<void> _showImageSourceSheet(void Function(String path) callbackWithFilePath) async {
+    if (!mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.black12,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('갤러리에서 선택'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickImageFrom(ImageSource.gallery, callbackWithFilePath);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('카메라로 촬영'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await _pickImageFrom(ImageSource.camera, callbackWithFilePath);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,10 +242,90 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+
           // 제목
           Text(
             widget.titleString,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: _pickedMainImagePath == null
+                ? () => _showImageSourceSheet((path) {
+              setState(() {
+                _pickedMainImagePath = path;
+              });
+            })
+                : null,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: double.infinity,
+              height: 260,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.grey.shade300,
+                  width: 1.5,
+                ),
+                color: Colors.grey.shade50,
+              ),
+              child: _pickedMainImagePath == null
+                  ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(
+                    Icons.photo_camera_outlined,
+                    size: 48,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    '사진을 추가하세요',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              )
+                  : Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(
+                      File(_pickedMainImagePath!),
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
+                    child: InkWell(
+                      onTap: () => _showImageSourceSheet((path) {
+                        setState(() {
+                          _pickedMainImagePath = path;
+                        });
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -216,13 +364,15 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
             ],
           ),
           const SizedBox(height: 8),
+
+
           const Divider(height: 34, thickness: 1),
 
           // 재료
           _buildSectionHeader('재료', _addIngredient),
           const SizedBox(height: 8),
           ...ingredientRows,
-          const SizedBox(height: 12),
+          //const SizedBox(height: 12),
 
           // 단계
           _buildSectionHeader('단계', _addStep),
@@ -231,29 +381,111 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
             final index = entry.key;
             final controller = entry.value;
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: controller,
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        labelText: '단계 ${index + 1}',
-                        border: const OutlineInputBorder(),
+            return Column(
+              children: [
+                InkWell(
+                  onTap: _pickedStepImagePaths[index] == null
+                      ? () => _showImageSourceSheet((path) {
+                        setState(() {
+                          _pickedStepImagePaths[index] = path;
+                        });
+                      })
+                      : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: double.infinity,
+                    height: _pickedStepImagePaths[index] == null ? 88 : 260,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        width: 1.5,
                       ),
+                      color: Colors.grey.shade50,
+                    ),
+                    child: _pickedStepImagePaths[index] == null
+                        ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(
+                          Icons.photo_camera_outlined,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
+                        Text(
+                          '사진을 추가하세요',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    )
+                        : Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(_pickedStepImagePaths[index]!),
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 8,
+                          right: 8,
+                          child: InkWell(
+                            onTap: () => _showImageSourceSheet((path) {
+                              setState(() {
+                                _pickedStepImagePaths[index] = path;
+                              });
+                            }),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.edit,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: () => _removeStep(index),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: controller,
+                          maxLines: 2,
+                          decoration: InputDecoration(
+                            labelText: '단계 ${index + 1}',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () => _removeStep(index),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const Divider(height: 16, ),
+              ],
             );
           }),
-          const SizedBox(height: 12),
           // 메모
           _buildSectionHeader('메모', _addMemo),
           const SizedBox(height: 8),
@@ -306,6 +538,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                       timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
                       ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
                       steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
+                      mainImagePath: _pickedMainImagePath,
+                      stepImagePaths: _pickedStepImagePaths,
                       memos: _memoControllers.map((controller) => controller.text.trim()).toList(),
                     ));
                   },
