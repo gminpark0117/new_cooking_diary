@@ -9,7 +9,6 @@ import "../data/grocery_provider.dart";
 
 
 class RecipePreview extends StatelessWidget {
-
   const RecipePreview({
     super.key,
     required this.recipe,
@@ -19,43 +18,61 @@ class RecipePreview extends StatelessWidget {
   final Recipe recipe;
   final void Function(Recipe recipe) pressedCallback;
 
+  static const Color brandColor = Color(0xFFB65A2C);
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-        child: ElevatedButton(
-          onPressed: () {
-            pressedCallback(recipe);
-          },
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    final theme = Theme.of(context);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => pressedCallback(recipe),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6), // 3페이지 느낌
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.receipt_long, color: brandColor, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    recipe.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold, // ✅ 장바구니처럼 bold
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    recipe.meta(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            alignment: Alignment.centerLeft,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                recipe.name,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                recipe.meta(),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
+            const Icon(Icons.chevron_right, color: Colors.black38),
+          ],
         ),
       ),
     );
   }
 }
+
+const Color brandColor = Color(0xFFB65A2C);
 
 class RecipeDetail extends StatelessWidget {
 
@@ -78,6 +95,13 @@ class RecipeDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white, // ✅ 핑크/보라 틴트 제거 핵심
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       clipBehavior: Clip.antiAlias,
       child: Padding(
@@ -115,7 +139,7 @@ class RecipeDetail extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.edit),
+                          icon: const Icon(Icons.edit, color: brandColor),
                           iconSize: 26,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -126,7 +150,7 @@ class RecipeDetail extends StatelessWidget {
                           },
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline),
+                          icon: const Icon(Icons.delete_outline, color: brandColor),
                           iconSize: 26,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -140,7 +164,13 @@ class RecipeDetail extends StatelessWidget {
               ),
             ),
 
-            const Divider(height: 1, thickness: 1),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Divider(
+                height: 1,
+                thickness: 1,
+              ),
+            ),
 
             Padding(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 16),
@@ -268,12 +298,23 @@ class _RecipeIngAndStepsState extends ConsumerState<RecipeIngAndSteps> {
         const SizedBox(height:10),
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton(
+          height: 48, // ✅ 지금 버튼 크기 유지
+          child: FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB65A2C),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             onPressed: () async {
               final messenger = ScaffoldMessenger.of(context);
               for (final idx in _checkedIngredientIndexes) {
                 await ref.read(groceryProvider.notifier).upsertGrocery(
-                    Grocery(name: widget.recipe.ingredients[idx], recipeName: widget.recipe.name)
+                  Grocery(
+                    name: widget.recipe.ingredients[idx],
+                    recipeName: widget.recipe.name,
+                  ),
                 );
               }
               if (_checkedIngredientIndexes.isNotEmpty) {
@@ -283,9 +324,13 @@ class _RecipeIngAndStepsState extends ConsumerState<RecipeIngAndSteps> {
                 );
               }
             },
-            child: const Text('장바구니에 추가'),
+            child: const Text(
+              '장바구니에 추가',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
+
         const SizedBox(height: 20),
 
 
@@ -301,8 +346,10 @@ class _RecipeIngAndStepsState extends ConsumerState<RecipeIngAndSteps> {
                 (entry) {
               final i = entry.key;
               final step = entry.value;
+              final isLast = i == steps.length - 1;
+
               return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: EdgeInsets.only(bottom: isLast ? 4 : 10),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -317,7 +364,7 @@ class _RecipeIngAndStepsState extends ConsumerState<RecipeIngAndSteps> {
             },
           ),
         if (memos.isNotEmpty)
-          Divider(height: 24,thickness: 1,indent: 8,endIndent: 8,),
+          Divider(height: 12,thickness: 1,),
 
         // this still shows nothing if memos is empty
         ...memos.map(
@@ -427,7 +474,11 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
         onDeleteCallback: widget.onDeleteCallback,
         isPreview: isPreview,
       ),
-      const Divider(height: 24, thickness: 1, indent: 8, endIndent: 8),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: const Divider(height: 24, thickness: 1),
+      ),
+
       Padding(
         padding: const EdgeInsets.only(top: 4, bottom: 12, left: 20),
         child: Text(
@@ -488,36 +539,86 @@ class _RecipeEntryPageState extends ConsumerState<RecipeEntryPage> {
       if (!isPreview)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: ElevatedButton(
-            onPressed: _popRecipeOrGoBack,
-            child: const Text('뒤로가기'),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48, // ✅ 다른 뒤로가기 버튼과 동일
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.grey,
+                elevation: 0,
+                surfaceTintColor: Colors.white, // ✅ 틴트 제거
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+              onPressed: _popRecipeOrGoBack,
+              child: const Text(
+                '뒤로가기',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
         )
+
       else
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
+              // ✅ 왼쪽: 뒤로가기 (취소 버튼 스타일)
               Expanded(
-                child: FilledButton(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    await ref
-                        .read(recipeProvider.notifier)
-                        .upsertRecipe(recipeStack.last);
-                    messenger.clearSnackBars();
-                    messenger.showSnackBar(
-                      const SnackBar(content: Text('레시피를 추가했습니다.')),
-                    );
-                  },
-                  child: const Text('레시피 저장'),
+                child: SizedBox(
+                  height: 48, // ✅ 지금 버튼 높이 유지
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      // "취소" 버튼이 기본 ElevatedButton 느낌이면 이 세팅이 가장 비슷하게 나옴
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.grey,
+                      elevation: 0,
+                      surfaceTintColor: Colors.white, // ✅ 핑크 틴트 방지
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    onPressed: _popRecipeOrGoBack,
+                    child: const Text(
+                      '뒤로가기',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ),
+
               const SizedBox(width: 12),
+
+              // ✅ 오른쪽: 레시피 저장 (2페이지 메인 버튼 스타일)
               Expanded(
-                child: ElevatedButton(
-                  onPressed: _popRecipeOrGoBack,
-                  child: const Text('뒤로가기'),
+                child: SizedBox(
+                  height: 48, // ✅ 지금 버튼 높이 유지
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: brandColor, // ✅ #B65A2C
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      await ref.read(recipeProvider.notifier).upsertRecipe(recipeStack.last);
+                      messenger.clearSnackBars();
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('레시피를 추가했습니다.')),
+                      );
+                    },
+                    child: const Text(
+                      '레시피 저장',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ),
             ],

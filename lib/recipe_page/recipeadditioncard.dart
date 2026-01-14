@@ -126,7 +126,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                         iconSize: 20,
                         padding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.remove_circle_outline),
+                        icon: const Icon(Icons.remove_circle_outline, color: Color(0xFFB65A2C)),
                         onPressed: () => _removeIngredient(i),
                       ),
                     ],
@@ -150,7 +150,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                             iconSize: 20,
                             padding: EdgeInsets.zero,
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.remove_circle_outline),
+                            icon: const Icon(Icons.remove_circle_outline, color: Color(0xFFB65A2C)),
                             onPressed: () => _removeIngredient(i+1),
                           ),
                         ],
@@ -246,7 +246,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
+                    icon: const Icon(Icons.remove_circle_outline, color: Color(0xFFB65A2C)),
                     onPressed: () => _removeStep(index),
                   ),
                 ],
@@ -276,7 +276,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
+                    icon: const Icon(Icons.remove_circle_outline, color: Color(0xFFB65A2C)),
                     onPressed: () => _removeMemo(index),
                   ),
                 ],
@@ -285,39 +285,81 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
           }),
           const SizedBox(height: 24),
 
-          // 저장, 삭제버튼
+          // 저장, 취소 버튼 (위치/디자인 통일)
           Row(
             children: [
+              // ✅ 왼쪽: 취소 (뒤로가기/취소 스타일)
               Expanded(
-                child: FilledButton(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    if (_nameController.text.trim().isEmpty) {
-                      messenger.clearSnackBars();
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('레시피의 이름을 입력하세요.')),
-                      );
-                      return;
-                    }
-                    await widget.onSubmitCallback(Recipe(
-                      id: widget.initialRecipe?.id,
-                      name: _nameController.text.trim(),
-                      portionSize: _portionController.text.trim().isEmpty ? null : _portionController.text,
-                      timeTaken: _timeController.text.trim().isEmpty ? null : _timeController.text,
-                      ingredients: _ingredientControllers.map((controller) => controller.text.trim()).toList(),
-                      steps: _stepControllers.map((controller) => controller.text.trim()).toList(),
-                      memos: _memoControllers.map((controller) => controller.text.trim()).toList(),
-                    ));
-                  },
-                  child: const Text('레시피 저장'),
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.grey, // ✅ 너가 통일하려던 그 글씨색
+                      elevation: 0,
+                      surfaceTintColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Colors.grey.shade300),
+                      ),
+                    ),
+                    onPressed: widget.onCancelCallback,
+                    child: const Text(
+                      '취소',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ),
+
               const SizedBox(width: 12),
 
+              // ✅ 오른쪽: 레시피 저장 (저장 버튼 스타일)
               Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.onCancelCallback,
-                  child: const Text('취소'),
+                child: SizedBox(
+                  height: 48,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFB65A2C),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+
+                      if (_nameController.text.trim().isEmpty) {
+                        messenger.clearSnackBars();
+                        messenger.showSnackBar(
+                          const SnackBar(content: Text('레시피의 이름을 입력하세요.')),
+                        );
+                        return;
+                      }
+
+                      await widget.onSubmitCallback(
+                        Recipe(
+                          id: widget.initialRecipe?.id,
+                          name: _nameController.text.trim(),
+                          portionSize: _portionController.text.trim().isEmpty
+                              ? null
+                              : _portionController.text,
+                          timeTaken: _timeController.text.trim().isEmpty
+                              ? null
+                              : _timeController.text,
+                          ingredients: _ingredientControllers
+                              .map((c) => c.text.trim())
+                              .toList(),
+                          steps: _stepControllers.map((c) => c.text.trim()).toList(),
+                          memos: _memoControllers.map((c) => c.text.trim()).toList(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      '레시피 저장',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -336,7 +378,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         IconButton(
-          icon: const Icon(Icons.add),
+          icon: const Icon(Icons.add, color: Color(0xFFB65A2C)),
           onPressed: onAdd,
         ),
       ],
@@ -353,8 +395,8 @@ class PaddedRecipeAdditionCard extends StatelessWidget {
     this.initialRecipe,
   });
 
-  final Future<void> Function(Recipe recipe) onSubmitCallback; // 레시피 저장 눌렀을 시의 callback, 에러 핸들링까지 해줘요!
-  final VoidCallback onCancelCallback; // 레시피 취소 눌렀을 시의 callback.
+  final Future<void> Function(Recipe recipe) onSubmitCallback;
+  final VoidCallback onCancelCallback;
 
   final Recipe? initialRecipe;
   final String titleString;
@@ -362,11 +404,23 @@ class PaddedRecipeAdditionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white,
+      surfaceTintColor: Colors.white, // ✅ 틴트 제거
+      elevation: 0, // (원하면)
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       clipBehavior: Clip.antiAlias,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(24),
-        child: RecipeAdditionCard(titleString: titleString, onSubmitCallback: onSubmitCallback, onCancelCallback: onCancelCallback, initialRecipe: initialRecipe,),
+        padding: const EdgeInsets.all(24),
+        child: RecipeAdditionCard(
+          titleString: titleString,
+          onSubmitCallback: onSubmitCallback,
+          onCancelCallback: onCancelCallback,
+          initialRecipe: initialRecipe,
+        ),
       ),
     );
   }
