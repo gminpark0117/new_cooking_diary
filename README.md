@@ -27,6 +27,6 @@
 2. 다음 코드 실행:
    ```bash
     git clone https://github.com/gminpark0117/new_cooking_diary.git
-     cd new_cooking_diary
+    cd new_cooking_diary
     flutter pub get
     flutter run
