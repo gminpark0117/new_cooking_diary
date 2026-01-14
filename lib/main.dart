@@ -103,7 +103,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               mainAxisSize: MainAxisSize.min,
               children: const [
                 Text(
-                  '쿠킹 다이어리',
+                  '국자와 연필',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -113,7 +113,7 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
                 ),
                 SizedBox(height: 5),
                 Text(
-                  '나만의 요리 레시피 기록',
+                  '오늘은 어떤 요리를 만들었나요?',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -142,8 +142,8 @@ class _MyHomePageState extends ConsumerState<MyHomePage> {
               label: '레시피',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt),
-            label: '요리 기록',
+            icon: Icon(Icons.edit),
+            label: '로그',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),

@@ -372,10 +372,9 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
           _buildSectionHeader('재료', _addIngredient),
           const SizedBox(height: 8),
           ...ingredientRows,
-          //const SizedBox(height: 12),
 
           // 단계
-          _buildSectionHeader('단계', _addStep),
+          _buildSectionHeader('순서', _addStep),
           const SizedBox(height: 8),
           ..._stepControllers.asMap().entries.map((entry) {
             final index = entry.key;

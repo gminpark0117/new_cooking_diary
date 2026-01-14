@@ -116,7 +116,7 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
     );
     messenger.clearSnackBars();
     messenger.showSnackBar(
-      const SnackBar(content: Text('기록을 수정하였습니다.')),
+      const SnackBar(content: Text('로그를 수정하였습니다.')),
     );
 
     if (mounted) {
@@ -191,12 +191,12 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
 
 // 📝 메모 영역
             if (_isEditing || widget.entry.note?.trim().isNotEmpty == true) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 0),
 
               const Text(
-                '메모',
+                '',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 0,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFFB65A2C), // 로고 색
                 ),
@@ -220,7 +220,7 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
                   minLines: 3,
                   maxLines: 6,
                   decoration: const InputDecoration(
-                    hintText: '메모를 입력하세요',
+                    hintText: '로그를 입력하세요..',
                     border: InputBorder.none,
                     isDense: true,
                   ),

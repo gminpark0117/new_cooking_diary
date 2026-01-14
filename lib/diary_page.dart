@@ -228,7 +228,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                   children: const [
                     SizedBox(height: 10),
                     Text(
-                      '새 요리 기록',
+                      '새 로그 기록',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -355,7 +355,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                   minLines: 1,
                   maxLines: 10000,
                   decoration: InputDecoration(
-                    hintText: '기록',
+                    hintText: '로그',
                     hintStyle: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
@@ -434,7 +434,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                           );
                           messenger.clearSnackBars();
                           messenger.showSnackBar(
-                            const SnackBar(content: Text('기록을 추가하였습니다.')),
+                            const SnackBar(content: Text('로그를 추가하였습니다.')),
                           );
         
                           setState(() {
@@ -587,7 +587,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                       }
                       messenger.clearSnackBars();
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('기록을 삭제하였습니다.')),
+                        const SnackBar(content: Text('로그를 삭제하였습니다.')),
                       );
 
                       setState(() {
@@ -642,7 +642,7 @@ class _DiaryPageState extends ConsumerState<DiaryPage> {
                       },
                       icon: const Icon(Icons.add_a_photo_outlined),
                       label: const Text(
-                        '새 요리 기록하기',
+                        '새 로그 기록하기',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
