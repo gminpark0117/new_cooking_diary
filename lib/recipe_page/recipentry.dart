@@ -352,46 +352,44 @@ class _RecipeIngAndStepsState extends ConsumerState<RecipeIngAndSteps> {
               final step = entry.value;
               final isLast = i == steps.length - 1;
 
-              return Padding(
-                padding: EdgeInsets.only(bottom: isLast ? 4 : 10),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              return Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        child: Text('${i + 1}.'),
+                      ),
+                      Expanded(child: Text(step)),
+                    ],
+                  ),
+                  if (widget.recipe.stepImagePaths[i] != null)
+                    Column(
                       children: [
-                        SizedBox(
-                          width: 20,
-                          child: Text('${i + 1}.'),
-                        ),
-                        Expanded(child: Text(step)),
-                      ],
-                    ),
-                    if (widget.recipe.stepImagePaths[i] != null)
-                      Column(
-                        children: [
-                          SizedBox(height: 4,),
-                          AspectRatio(
-                            aspectRatio: 1,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.file(
-                                File(widget.recipe.stepImagePaths[i]!),
-                                fit: BoxFit.cover,
-                              ),
+                        SizedBox(height: 6,),
+                        AspectRatio(
+                          aspectRatio: 1,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.file(
+                              File(widget.recipe.stepImagePaths[i]!),
+                              fit: BoxFit.cover,
                             ),
                           ),
-                          SizedBox(height: 6,),
-                        ],
-                      ),
-                    if (!isLast)
-                      Divider(height: 16),
-                  ],
-                ),
+                        ),
+                        SizedBox(height: 12,),
+                      ],
+                    ),
+                  if (!isLast)
+                    Divider(height: 16,),
+                ],
               );
             },
           ),
+
         if (memos.isNotEmpty)
-          Divider(height: 12,thickness: 1,),
+          SizedBox(height:28),
 
         // this still shows nothing if memos is empty
         ...memos.map(
