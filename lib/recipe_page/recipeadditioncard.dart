@@ -468,7 +468,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                       Expanded(
                         child: TextField(
                           controller: controller,
-                          maxLines: 2,
+                          minLines: 1,
+                          maxLines: 1000,
                           decoration: InputDecoration(
                             labelText: '순서 ${index + 1}',
                             border: const OutlineInputBorder(),
@@ -500,7 +501,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                   Expanded(
                     child: TextField(
                       controller: controller,
-                      maxLines: 2,
+                      minLines: 1,
+                      maxLines: 10000,
                       decoration: InputDecoration(
                         labelText: '메모 ${index + 1}',
                         border: const OutlineInputBorder(),
