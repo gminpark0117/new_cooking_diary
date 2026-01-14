@@ -218,7 +218,7 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
                     ? TextField(
                   controller: _memoController,
                   minLines: 3,
-                  maxLines: 6,
+                  maxLines: 10000,
                   decoration: const InputDecoration(
                     hintText: '로그를 입력하세요..',
                     border: InputBorder.none,
@@ -235,6 +235,7 @@ class _DiaryDetailPageState extends ConsumerState<DiaryDetailPage> {
                 ),
               ),
             ],
+            SizedBox(height: 40,),
           ],
         ),
       ),
