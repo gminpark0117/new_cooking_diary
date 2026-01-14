@@ -1,5 +1,7 @@
 # 국자와 연필
- 
+
+
+<img width="200" height="200" alt="Image" src="https://github.com/gminpark0117/new_cooking_diary/blob/master/assets/splash/splash.png" />
 나만의 레시피를 관리하고, 요리 과정을 기록하며, 장보기에도 도움을 줄 수 있는 다이어리 앱입니다.
 
 ---
@@ -19,10 +21,10 @@
 
 ---
 
-## 🚀 설치 및 실행
+## 설치 및 실행
 
 1. Flutter SDK 설치
-    - [Flutter 공식 문서](https://flutter.dev) 참고
+    - [Flutter 공식 문서](https://flutter.dev)를 참고해주세요.
 
 2. 다음 코드 실행:
    ```bash
