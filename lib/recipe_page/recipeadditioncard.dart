@@ -31,6 +31,14 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
   late final List<TextEditingController> _stepControllers;
   late final List<TextEditingController> _memoControllers;
 
+  late final FocusNode _nameFocus;
+  late final FocusNode _portionFocus;
+  late final FocusNode _timeFocus;
+  late final List<FocusNode> _ingredientFocusNodes;
+  late final List<FocusNode> _stepFocusNodes;
+  late final List<FocusNode> _memoFocusNodes;
+
+
   final _picker = ImagePicker();
   String? _pickedMainImagePath;
   List<String?> _pickedStepImagePaths = [];
@@ -49,6 +57,25 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     _memoControllers = (widget.initialRecipe?.memos ?? []).map((memo) => TextEditingController(text: memo)).toList();
     _pickedMainImagePath = widget.initialRecipe?.mainImagePath;
     _pickedStepImagePaths = widget.initialRecipe?.stepImagePaths ?? [];
+
+    _ingredientFocusNodes = List.generate(
+      _ingredientControllers.length,
+          (_) => FocusNode()..addListener(() => setState(() {})),
+    );
+
+    _stepFocusNodes = List.generate(
+      _stepControllers.length,
+          (_) => FocusNode()..addListener(() => setState(() {})),
+    );
+
+    _memoFocusNodes = List.generate(
+      _memoControllers.length,
+          (_) => FocusNode()..addListener(() => setState(() {})),
+    );
+
+    _nameFocus = FocusNode()..addListener(() => setState(() {}));
+    _portionFocus = FocusNode()..addListener(() => setState(() {}));
+    _timeFocus = FocusNode()..addListener(() => setState(() {}));
   }
 
   @override
@@ -56,6 +83,20 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     _nameController.dispose();
     _portionController.dispose();
     _timeController.dispose();
+
+    _nameFocus.dispose();
+    _portionFocus.dispose();
+    _timeFocus.dispose();
+
+    for (final f in _ingredientFocusNodes) {
+      f.dispose();
+    }
+    for (final f in _stepFocusNodes) {
+      f.dispose();
+    }
+    for (final f in _memoFocusNodes) {
+      f.dispose();
+    }
 
     for (final c in _ingredientControllers) {
       c.dispose();
@@ -72,12 +113,14 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
   void _addIngredient() {
     setState(() {
       _ingredientControllers.add(TextEditingController());
+      _ingredientFocusNodes.add(FocusNode()..addListener(() => setState(() {})));
     });
   }
 
   void _addStep() {
     setState(() {
       _stepControllers.add(TextEditingController());
+      _stepFocusNodes.add(FocusNode()..addListener(() => setState(() {})));
       _pickedStepImagePaths.add(null);
     });
   }
@@ -85,6 +128,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
   void _addMemo() {
     setState(() {
       _memoControllers.add(TextEditingController());
+      _memoFocusNodes.add(FocusNode()..addListener(() => setState(() {})));
     });
   }
 
@@ -92,6 +136,9 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     setState(() {
       _ingredientControllers[index].dispose();
       _ingredientControllers.removeAt(index);
+
+      _ingredientFocusNodes[index].dispose();
+      _ingredientFocusNodes.removeAt(index);
     });
   }
 
@@ -99,6 +146,10 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     setState(() {
       _stepControllers[index].dispose();
       _stepControllers.removeAt(index);
+
+      _stepFocusNodes[index].dispose();
+      _stepFocusNodes.removeAt(index);
+
       _pickedStepImagePaths.removeAt(index);
     });
   }
@@ -107,6 +158,9 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     setState(() {
       _memoControllers[index].dispose();
       _memoControllers.removeAt(index);
+
+      _memoFocusNodes[index].dispose();
+      _memoFocusNodes.removeAt(index);
     });
   }
 
@@ -168,6 +222,67 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     );
   }
 
+  static const Color _brandColor = Color(0xFFB65A2C);
+
+  static const double _gapS = 8;   // 촘촘한 간격
+  static const double _gapM = 12;  // 기본 간격
+  static const double _gapL = 16;  // 섹션/구분 간격
+
+  Widget _sectionDivider() => const Padding(
+    padding: EdgeInsets.symmetric(vertical: _gapL), // 위/아래 통일
+    child: Divider(height: 1, thickness: 1),
+  );
+
+  Widget _itemDivider() => const Padding(
+    padding: EdgeInsets.symmetric(vertical: _gapM),
+    child: Divider(height: 1, thickness: 1),
+  );
+
+  InputDecoration _inputDeco(String label, {required bool isFocused}) {
+    final labelColor = isFocused ? _brandColor : Colors.black54;
+
+    return InputDecoration(
+      labelText: label,
+
+      // ✅ 기본 라벨: 회색, 포커스면 브랜드색
+      labelStyle: TextStyle(
+        color: labelColor,
+        fontWeight: FontWeight.w500,
+      ),
+
+      // ✅ 떠있는 라벨도 동일하게: 포커스면 브랜드색, 아니면 회색
+      floatingLabelStyle: TextStyle(
+        color: labelColor,
+        fontWeight: FontWeight.w600,
+      ),
+
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _brandColor, width: 1.8),
+      ),
+    );
+  }
+
+  TextStyle _inputTextStyle() {
+    return const TextStyle(
+      color: Colors.black,
+      fontSize: 15,
+      fontWeight: FontWeight.w500,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -175,7 +290,7 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
     for (int i = 0; i < _ingredientControllers.length; i += 2) {
       ingredientRows.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 15),
           child: Row(
             children: [
               Expanded(
@@ -184,10 +299,9 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                       Expanded(
                         child: TextField(
                           controller: _ingredientControllers[i],
-                          decoration: InputDecoration(
-                            labelText: '재료 ${i+1}',
-                            border: const OutlineInputBorder(),
-                          ),
+                          focusNode: _ingredientFocusNodes[i],
+                          style: _inputTextStyle(),
+                          decoration: _inputDeco('재료 ${i + 1}', isFocused: _ingredientFocusNodes[i].hasFocus),
                         ),
                       ),
                       IconButton(
@@ -207,11 +321,10 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                         children: [
                           Expanded(
                             child: TextField(
-                              controller: _ingredientControllers[i+1],
-                              decoration: InputDecoration(
-                                labelText: '재료 ${i+2}',
-                                border: const OutlineInputBorder(),
-                              ),
+                              controller: _ingredientControllers[i + 1],
+                              focusNode: _ingredientFocusNodes[i + 1],
+                              style: _inputTextStyle(),
+                              decoration: _inputDeco('재료 ${i + 2}', isFocused: _ingredientFocusNodes[i + 1].hasFocus),
                             ),
                           ),
                           IconButton(
@@ -332,12 +445,12 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
           // 이름
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: '레시피 이름',
-              border: OutlineInputBorder(),
-            ),
+            focusNode: _nameFocus,
+            style: _inputTextStyle(),
+            decoration: _inputDeco('레시피 이름', isFocused: _nameFocus.hasFocus),
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 15),
 
           // 분량, 소요시간
           Row(
@@ -345,33 +458,34 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
               Expanded(
                 child: TextField(
                   controller: _portionController,
-                  decoration: const InputDecoration(
-                    labelText: '분량 (선택사항)',
-                    border: OutlineInputBorder(),
-                  ),
+                  focusNode: _portionFocus,
+                  style: _inputTextStyle(),
+                  decoration: _inputDeco('분량 (선택사항)', isFocused: _portionFocus.hasFocus),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
                   controller: _timeController,
-                  decoration: const InputDecoration(
-                    labelText: '시간 (선택사항)',
-                    border: OutlineInputBorder(),
-                  ),
+                  focusNode: _timeFocus,
+                  style: _inputTextStyle(),
+                  decoration: _inputDeco('시간 (선택사항)', isFocused: _timeFocus.hasFocus),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          // const SizedBox(height: 8),
 
+          // const Divider(height: 34, thickness: 1),
 
-          const Divider(height: 34, thickness: 1),
+          const SizedBox(height: _gapM),
+          _sectionDivider(),
 
           // 재료
           _buildSectionHeader('재료', _addIngredient),
           const SizedBox(height: 8),
           ...ingredientRows,
+          _sectionDivider(),
 
           // 단계
           _buildSectionHeader('순서', _addStep),
@@ -458,9 +572,8 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                       ],
                     ),
                   ),
-/*<<<<<<< HEAD*/
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 15),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
@@ -468,12 +581,10 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                       Expanded(
                         child: TextField(
                           controller: controller,
-                          minLines: 1,
-                          maxLines: 1000,
-                          decoration: InputDecoration(
-                            labelText: '순서 ${index + 1}',
-                            border: const OutlineInputBorder(),
-                          ),
+                          focusNode: _stepFocusNodes[index],
+                          style: _inputTextStyle(),
+                          maxLines: 2,
+                          decoration: _inputDeco('순서 ${index + 1}', isFocused: _stepFocusNodes[index].hasFocus),
                         ),
                       ),
                       IconButton(
@@ -483,10 +594,14 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
                     ],
                   ),
                 ),
-                const Divider(height: 16, ),
+                // const Divider(height: 16,),
+                if (index != _stepControllers.length - 1) _itemDivider(),
               ],
             );
           }),
+
+          _sectionDivider(),
+
           // 메모
           _buildSectionHeader('메모', _addMemo),
           const SizedBox(height: 8),
@@ -495,18 +610,16 @@ class _RecipeAdditionCardState extends State<RecipeAdditionCard> {
             final controller = entry.value;
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 15),
               child: Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: controller,
-                      minLines: 1,
-                      maxLines: 10000,
-                      decoration: InputDecoration(
-                        labelText: '메모 ${index + 1}',
-                        border: const OutlineInputBorder(),
-                      ),
+                      focusNode: _memoFocusNodes[index],
+                      style: _inputTextStyle(),
+                      maxLines: 2,
+                      decoration: _inputDeco('메모 ${index + 1}', isFocused: _memoFocusNodes[index].hasFocus),
                     ),
                   ),
                   IconButton(

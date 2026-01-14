@@ -21,15 +21,19 @@ class GroceryEditCard extends StatefulWidget {
 class _GroceryEditCardState extends State<GroceryEditCard> {
   late final TextEditingController _nameController;
 
+  late final FocusNode _nameFocus;
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.initialGrocery.name);
+    _nameFocus = FocusNode()..addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
@@ -40,13 +44,31 @@ class _GroceryEditCardState extends State<GroceryEditCard> {
       children: [
         TextField(
           controller: _nameController,
+          focusNode: _nameFocus,
           style: const TextStyle(color: Colors.black),
           decoration: InputDecoration(
             labelText: '재료명',
-            labelStyle: const TextStyle(color: Colors.black54),
+
+            // ✅ 포커스 여부에 따라 라벨 색 변경
+            labelStyle: TextStyle(
+              color: _nameFocus.hasFocus
+                  ? const Color(0xFFB65A2C)
+                  : Colors.black54,
+              fontWeight: FontWeight.w500,
+            ),
+
+            // ✅ 떠있는 라벨도 동일하게 (이거 안 하면 반만 바뀜)
+            floatingLabelStyle: TextStyle(
+              color: _nameFocus.hasFocus
+                  ? const Color(0xFFB65A2C)
+                  : Colors.black54,
+              fontWeight: FontWeight.w600,
+            ),
+
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade300, width: 1.5),
